@@ -14,13 +14,19 @@ class Portfolio:
         self.holdings = pd.DataFrame(columns=['Date'])
         self.holdings.set_index('Date', inplace=True)
         self.day_count = 0
-        self.holdings.at[self.current_day, 'day count'] = self.day_count
         self.price_field='Adj Close'
         self.transaction_cost=0.01
         self.total_transaction_cost=0
+        self.update_day_holdings()
+        self.last_day = dataset.index[-1]
+        self.length_dataset = len(dataset)
+        self.net_worth = self.current_cash
 
     def get_holdings(self):
         return self.holdings
+
+    def get_date(self):
+        return self.current_day
 
     def get_cash(self):
         return self.current_cash
@@ -32,22 +38,75 @@ class Portfolio:
     def get_transaction_costs(self):
         return self.total_transaction_costs
 
-    def next_day_date(self, days=1):
-        self.day_count = self.day_count + days
-        self.current_day = self.current_day + datetime.timedelta(days=days)
-        return self.current_day
-
     def last_row_date_updated(self, df, date):
         df = df.iloc[-1:].reset_index().copy()
         df['Date'] = date
         df.set_index('Date', inplace=True)
         return df
 
+    def get_current_stocks(self):
+        tickers = []
+        current_stocks = []
+        df = self.holdings
+        last_row = df.iloc[-1:].copy()
+
+        for ticker in list(last_row.columns.values):
+            if not ticker.startswith('_'):
+                tickers.append(ticker)
+
+        for ticker in tickers:
+            number_shares = last_row.loc[last_row.index[-1]].at[ticker]
+            if number_shares > 0:
+                current_stocks.append(ticker)
+        return current_stocks
+
+    def get_num_shares(self, ticker):
+        number_shares = 0
+        df = self.holdings
+        last_row = df.iloc[-1:].copy()
+
+        if ticker not in list(last_row.columns.values):
+            NameError('Cant get # shares, stock doesnt exist in holding.dataframe')
+
+        number_shares = last_row.loc[last_row.index[-1]].at[ticker]
+        return number_shares
+
+    def calc_net_worth(self):
+        cash = self.current_cash
+        current_stocks = self.get_current_stocks()
+        total_net_worth = 0 + cash
+
+        for stock in current_stocks:
+            price = dm.get_value(stock, self.price_field, self.current_day, self.dataset, 1)
+            stock_total_cost = price * self.get_num_shares(stock)
+            total_net_worth = total_net_worth + stock_total_cost
+
+        return total_net_worth
+
     def update_day_holdings(self):
-        self.holdings.at[self.current_day, 'day count'] = self.day_count
-        self.holdings.at[self.current_day, 'transaction costs'] = self.total_transaction_cost
-        self.holdings.at[self.current_day, 'cash'] = self.current_cash
+        self.holdings.at[self.current_day, '_day count'] = self.day_count
+        self.holdings.at[self.current_day, '_transaction costs'] = self.total_transaction_cost
+        self.holdings.at[self.current_day, '_cash'] = self.current_cash
+        self.holdings.at[self.current_day, '_net_worth'] = self.calc_net_worth()
         return
+        return
+
+    def next_day_date(self):
+        self.day_count = self.day_count + 1
+        df = self.dataset
+
+        if self.current_day == self.last_day:
+            print('\nLast day of portfolio simulatio\n No more days to go')
+            return False
+
+        idx = df.index.get_loc(self.current_day)
+        next_day = df.index[min(idx + 1, self.length_dataset - 1)]
+        next_day = pd.to_datetime(next_day, format="%Y-%m-%d", errors='coerce').date()
+        return next_day
+        #
+        #
+        # self.current_day = self.current_day + datetime.timedelta(days=days)
+        # return self.current_day
 
     def init_day_holdings(self):
         new_row = self.last_row_date_updated(self.holdings,self.current_day)
@@ -55,20 +114,22 @@ class Portfolio:
         self.update_day_holdings()
         return self.holdings
 
-    def next_day(self,days=1):
-        self.next_day_date(days)
+    def next_day(self):
+        #add condition for last day
+        self.current_day = self.next_day_date()
         self.init_day_holdings()
 
     def add_stock(self, stock_ticker, number_shares):
-        print('buy')
+        # print('buy')
         if stock_ticker not in self.holdings.columns.values:
             self.holdings.at[self.current_day, stock_ticker] = number_shares
         else:
             self.holdings.at[self.current_day, stock_ticker] = self.holdings.at[self.current_day, stock_ticker] + number_shares
 
 
+    # Add error management
     def remove_stock(self, stock_ticker, number_shares):
-        print('buy')
+        # print('sell')
         if stock_ticker not in self.holdings.columns.values:
             print('\nERROR: Stock is not held')
             return False
@@ -103,7 +164,7 @@ class Portfolio:
         transaction_cost = order_return * self.transaction_cost
         total_return = order_return - transaction_cost
 
-        if self.remove_stock(stock_ticker,number_shares):
+        if self.remove_stock(stock_ticker, number_shares):
             self.current_cash = self.current_cash + total_return
             self.total_transaction_cost = self.total_transaction_cost + transaction_cost
             return True

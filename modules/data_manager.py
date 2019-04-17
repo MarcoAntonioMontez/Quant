@@ -3,6 +3,7 @@ import numpy as np
 from random import sample
 
 #Loads csv and checks the type, ie: fundamentals, constituents, and performs adequate date formatting
+
 def load_csv(df_path, dataset_type=0):
     """
     Loads csv into a dataframe
@@ -24,6 +25,22 @@ def load_csv(df_path, dataset_type=0):
         df['from'] = pd.to_datetime(df['from'], format="%d/%m/%Y", errors='coerce')
         df['thru'] = pd.to_datetime(df['thru'], format="%d/%m/%Y", errors='coerce')
     return df
+
+
+def unique_headers( dataset, dataset_type=1):
+    """
+    Returns the unique headers of a dataset.
+
+    """
+    if (dataset_type == 0):  # in case of fundamentals
+        print('\n not implmented for fundamental')
+        # return dataset[dataset['tic'].str.strip() == company].reset_index(drop=True)
+    elif (dataset_type == 1):  # in case of stock prices1
+        return dataset.columns.get_level_values(0).unique()
+    elif (dataset_type == 2):  # in case of constituents
+        print('\n not implmented for constituints')
+        # return dataset[dataset['co_conm'].str.strip() == company].reset_index(drop=True)
+
 
 # Search by company
 def data_company(company, dataset, dataset_type=0):
@@ -60,7 +77,7 @@ def data_companies(company_list, dataset, dataset_type=0):
     elif (dataset_type == 1):  # in case of stock prices
         for ticker in company_list:
             company=data_company(ticker, dataset,1)
-            company.columns = company.columns.droplevel(1)
+            # company.columns = company.columns.droplevel(1)
             df_list.append(company)
 
         dataset = pd.concat(df_list, axis=1, keys=company_list)
