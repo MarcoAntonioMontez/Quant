@@ -15,7 +15,7 @@ class Portfolio:
         self.holdings.set_index('Date', inplace=True)
         self.day_count = 0
         self.price_field='Adj Close'
-        self.transaction_cost=0.01
+        self.transaction_cost=0.003
         self.total_transaction_cost=0
         self.update_day_holdings()
         self.last_day = dataset.index[-1]
