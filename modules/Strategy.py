@@ -13,10 +13,10 @@ class Strategy:
         self.portfolio = portfolio
         self.available_strategies = ['crossing_averages']
         if self.name not in self.available_strategies:
-            NameError('Strategy not available')
+            raise Exception('Strategy not available')
 
         if len(self.tradeable_tickers) == 0:
-            NameError('Plz choose at least one ticker to trade')
+            raise Exception('Plz choose at least one ticker to trade')
 
         self.order_list = []
 
@@ -58,7 +58,7 @@ class Strategy:
         data_fields = list(single_stock_data.columns.values)
         for indicator in indicators:
             if indicator not in data_fields:
-                NameError('Indicator not available')
+                raise Exception('Indicator not available')
                 return False
         return True
 

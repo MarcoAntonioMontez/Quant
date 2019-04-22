@@ -66,7 +66,7 @@ class Portfolio:
         last_row = df.iloc[-1:].copy()
 
         if ticker not in list(last_row.columns.values):
-            NameError('Cant get # shares, stock doesnt exist in holding.dataframe')
+            raise Exception('Cant get # shares, stock doesnt exist in holding.dataframe')
 
         number_shares = last_row.loc[last_row.index[-1]].at[ticker]
         return number_shares
@@ -118,6 +118,7 @@ class Portfolio:
         #add condition for last day
         self.current_day = self.next_day_date()
         self.init_day_holdings()
+        return self.current_day
 
     def add_stock(self, stock_ticker, number_shares):
         # print('buy')
