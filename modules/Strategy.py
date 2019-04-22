@@ -71,25 +71,28 @@ class Strategy:
         self.order_list.append(order)
 
     def crossing_averages(self):
-        indicators = ['Adj Close']
+        indicators = ['Adj Close','ema20']
         adj_close = 'Adj Close'
+        ema = 'ema50'
+
 
         #if fields exist dont exist in data raise exception
 
         def buy_signal(price, ticker):
-            if (price > 3.07):
+            if (price > ema_value):
                 return True
             else:
                 return False
 
         def sell_signal(price, ticker):
-            if (price > 3.20):
+            if (price < ema_value):
                 return True
             else:
                 return False
 
         for ticker in self.tradeable_tickers:
             price = dm.get_value(ticker, adj_close, self.current_date, self.dataset, 1)
+            ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
             if not self.is_stock_in_portfolio(ticker):
                 if buy_signal(price,ticker):
                     self.add_buy_order(ticker)

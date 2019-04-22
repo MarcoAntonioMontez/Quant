@@ -7,10 +7,10 @@ import math
 #date = datetime date
 
 class Portfolio:
-    def __init__(self, initial_capital, initial_day, dataset):
+    def __init__(self, initial_capital, start_day, dataset):
         self.current_cash = initial_capital
         self.dataset = dataset
-        self.current_day = pd.to_datetime(initial_day, format="%Y-%m-%d", errors='coerce').date()
+        self.current_day = pd.to_datetime(start_day, format="%Y-%m-%d", errors='coerce').date()
         self.holdings = pd.DataFrame(columns=['Date'])
         self.holdings.set_index('Date', inplace=True)
         self.day_count = 0
@@ -18,9 +18,11 @@ class Portfolio:
         self.transaction_cost=0.003
         self.total_transaction_cost=0
         self.update_day_holdings()
-        self.last_day = dataset.index[-1]
         self.length_dataset = len(dataset)
         self.net_worth = self.current_cash
+        self.start_day = start_day
+        self.end_day = self.dataset.index[-1].date()
+        # self.remaining_dates = self.create_date_index()
 
     def get_holdings(self):
         return self.holdings
@@ -91,11 +93,24 @@ class Portfolio:
         return
         return
 
+
+    # def create_date_index(self):
+    #     dates = []
+    #     start_date = self.start_day
+    #     end_date = self.end_day
+    #
+    #     for indice in self.dataset.index.values:
+    #         date_indice = pd.to_datetime(indice, format="%Y-%m-%d", errors='coerce').date()
+    #         if date_indice > start_date and date_indice <= end_date:
+    #             dates.append(date_indice)
+    #
+    #     return dates
+
     def next_day_date(self):
         self.day_count = self.day_count + 1
         df = self.dataset
 
-        if self.current_day == self.last_day:
+        if self.current_day == self.end_day:
             print('\nLast day of portfolio simulatio\n No more days to go')
             return False
 
@@ -103,10 +118,8 @@ class Portfolio:
         next_day = df.index[min(idx + 1, self.length_dataset - 1)]
         next_day = pd.to_datetime(next_day, format="%Y-%m-%d", errors='coerce').date()
         return next_day
-        #
-        #
-        # self.current_day = self.current_day + datetime.timedelta(days=days)
-        # return self.current_day
+        # next_day = self.remaining_dates.pop(0)
+        # return next_day
 
     def init_day_holdings(self):
         new_row = self.last_row_date_updated(self.holdings,self.current_day)
@@ -175,7 +188,7 @@ class Portfolio:
     def order(self,order_type, stock_ticker, number_share):
         flag = False
         if order_type == 'buy':
-            flag = self.buy_stock(stock_ticker,number_share)
+            flag = self.buy_stock(stock_ticker, number_share)
         elif order_type == 'sell':
             flag = self.sell_stock(stock_ticker, number_share)
 

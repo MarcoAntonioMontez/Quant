@@ -9,18 +9,19 @@ from modules import UserInput
 
 class Trader:
     def __init__(self, dataset, user_input):
-        self.dataset = dataset
         self.user_input = user_input
         self.initial_capital = user_input.initial_capital
         self.tickers = user_input.tickers
         self.strategy_name = user_input.strategy
-
         dates_dict = self.adjusted_dates(dataset, user_input.start_date, user_input.end_date)
         self.start_date = dates_dict['start_date']
         self.end_date = dates_dict['end_date']
+        self.dataset = self.truncate_dataset(dataset)
+        self.end_date = self.dataset.index[-1].date()
         self.current_day = self.start_date
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
         self.strategy = Strategy(self.strategy_name,self.dataset, self.tickers, self.portfolio)
+        self.number_shares = 100
 
 
 
@@ -64,10 +65,16 @@ class Trader:
         dates = {'start_date': real_start_date, 'end_date': real_end_date}
         return dates
 
+    def truncate_dataset(self, df):
+        df = df.copy()
+        df = df.truncate(before=self.start_date, after=self.end_date)
+        return df
+
     def simulate_day(self):
-        buy_sell_list = self.strategy.simulate_day(self.current_day)
-        #use buy and sell_list to send orders to portfolio
-        return buy_sell_list
+        orders = self.strategy.simulate_day(self.current_day)
+        for order in orders:
+            self.portfolio.order(order['Type'], order['Stock'], self.number_shares)
+        return orders
 
     def next_day(self):
         self.current_day = self.portfolio.next_day()
@@ -75,3 +82,10 @@ class Trader:
     def get_holdings(self):
         return self.portfolio.get_holdings()
 
+    def run_simulation(self):
+        while(self.current_day < self.end_date):
+            self.simulate_day()
+            self.next_day()
+        self.simulate_day()
+            # print('Current day:' + str(curren))
+            # print(self.current_day)
