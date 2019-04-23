@@ -89,10 +89,9 @@ class Portfolio:
         self.holdings.at[self.current_day, '_day count'] = self.day_count
         self.holdings.at[self.current_day, '_transaction costs'] = self.total_transaction_cost
         self.holdings.at[self.current_day, '_cash'] = self.current_cash
-        self.holdings.at[self.current_day, '_net_worth'] = self.calc_net_worth()
+        self.net_worth = self.calc_net_worth()
+        self.holdings.at[self.current_day, '_net worth'] = self.net_worth
         return
-        return
-
 
     # def create_date_index(self):
     #     dates = []
@@ -151,25 +150,57 @@ class Portfolio:
             print('\nERROR:Nan value for number of shares')
             return False
         elif self.holdings.at[self.current_day, stock_ticker] < number_shares:
+            if abs(self.holdings.at[self.current_day, stock_ticker] - number_shares) < 0.0000001:
+                self.holdings.at[self.current_day, stock_ticker] = 0
+                return True
+
             print('\nERROR:Not enough shares to sell')
+            print('\nDay: ' + str(self.current_day))
+            print('Number Shares held: ' + str(self.holdings.at[self.current_day, stock_ticker]))
+            print('Number of shares to sell: ' + str(number_shares))
             return False
         else:
             self.holdings.at[self.current_day, stock_ticker] = self.holdings.at[self.current_day, stock_ticker] - number_shares
-            return True
+
+        if abs(self.holdings.at[self.current_day, stock_ticker]) < 0.0000001:
+            self.holdings.at[self.current_day, stock_ticker] = 0
+        return True
+
+    def buy_stock_money(self, stock_ticker, money):
+        stock_price = self.get_current_price(stock_ticker)
+        number_shares = money / stock_price
+        return self.buy_stock(stock_ticker, number_shares)
+
+    def sell_stock_money(self, stock_ticker, money):
+        stock_price = self.get_current_price(stock_ticker)
+        number_shares = money / stock_price
+        return self.sell_stock(stock_ticker, number_shares)
 
     def buy_stock(self, stock_ticker, number_shares):
         stock_price = self.get_current_price(stock_ticker)
-        order_cost = stock_price * number_shares
+        real_number_shares = number_shares / (1 + self.transaction_cost)
+        order_cost = stock_price * real_number_shares
         transaction_cost = order_cost * self.transaction_cost
         total_cost = order_cost + transaction_cost
 
         if total_cost <= self.current_cash:
             self.current_cash = self.current_cash - total_cost
-            self.add_stock(stock_ticker,number_shares)
+            self.add_stock(stock_ticker,real_number_shares)
+            self.total_transaction_cost = self.total_transaction_cost + transaction_cost
+            return True
+        elif abs(total_cost - self.current_cash) < 0.000001:
+            total_cost = self.current_cash
+            self.current_cash = self.current_cash - total_cost
+            self.add_stock(stock_ticker, real_number_shares)
             self.total_transaction_cost = self.total_transaction_cost + transaction_cost
             return True
         else:
             print('\nNot enough cash to buy order')
+            print('\nDay: ' + str(self.current_day))
+            print('Number Share: ' + str(number_shares))
+            print('Total cost order: ' + str(total_cost))
+            print('Cash: ' + str(self.current_cash))
+
             return False
 
     def sell_stock(self, stock_ticker, number_shares):
@@ -184,6 +215,17 @@ class Portfolio:
             return True
         else:
             return False
+
+    def order_money(self,order_type, stock_ticker, money):
+        flag = False
+        if order_type == 'buy':
+            flag = self.buy_stock_money(stock_ticker, money)
+        elif order_type == 'sell':
+            flag = self.sell_stock_money(stock_ticker, money)
+
+        if flag:
+            self.update_day_holdings()
+        return flag
 
     def order(self,order_type, stock_ticker, number_share):
         flag = False
