@@ -73,7 +73,12 @@ class Trader:
     def simulate_day(self):
         orders = self.strategy.simulate_day(self.current_day)
         for order in orders:
-            self.portfolio.order_money(order['Type'], order['Stock'], self.portfolio.net_worth)
+            if order['Type'] == 'buy':
+                position = min(self.portfolio.current_cash, self.portfolio.net_worth/len(self.tickers))
+                self.portfolio.order_money(order['Type'], order['Stock'], position)
+            elif order['Type']=='sell':
+                total_stock_shares = self.portfolio.holdings.at[self.portfolio.current_day, order['Stock']]
+                self.portfolio.order(order['Type'], order['Stock'], total_stock_shares)
         return orders
 
     def next_day(self):

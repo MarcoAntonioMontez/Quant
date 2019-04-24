@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from modules import data_manager as dm
+import math
 
 
 #Loads csv and checks the type, ie: fundamentals, constituents, and performs adequate date formatting
@@ -85,3 +86,54 @@ def preprocess_table(df, ratios):
     df = df.drop(df.index[0:max_parameter])
     df = df.sort_index(axis=1)
     return df
+
+
+def get_log_pairs(df):
+    index = 0
+    row = df.iloc[index]
+    if row['order_type']=='sell':
+        index = index + 1
+
+    pairs_list = []
+    while index < (len(df)-1):
+        buy_row = df.iloc[index]
+        sell_row = df.iloc[index+1]
+        pairs_list.append(tuple([buy_row, sell_row]))
+        index = index + 2
+    return pairs_list
+
+
+def percentage_change(order_df):
+    log_pairs = get_log_pairs(order_df)
+    if len(log_pairs) == 0:
+        raise Exception('tuples len is zero!')
+        return
+
+    percentages = []
+    for buy_order,sell_order in log_pairs:
+        percentage_change = (sell_order['price']-buy_order['price'])/ buy_order['price']*100
+        percentage_change = truncate(percentage_change,2)
+
+        percentages.append(percentage_change)
+    return percentages
+
+def win_rate(order_df):
+    log_pairs = get_log_pairs(order_df)
+    if len(log_pairs) == 0:
+        raise Exception('tuples len is zero!')
+        return
+
+    win_list = []
+    for buy_order,sell_order in log_pairs:
+        if buy_order['price'] < sell_order['price']:
+            win_list.append(1)
+        else:
+            win_list.append(0)
+    win_rate = float(win_list.count(1))/len(win_list)*100
+    win_rate = truncate(win_rate,3)
+    return win_rate,win_list
+
+def truncate(number, digits) -> float:
+    stepper = pow(10.0, digits)
+    return math.trunc(stepper * number) / stepper
+

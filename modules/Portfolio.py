@@ -22,6 +22,7 @@ class Portfolio:
         self.net_worth = self.current_cash
         self.start_day = start_day
         self.end_day = self.dataset.index[-1].date()
+        self.orders_log = []
         # self.remaining_dates = self.create_date_index()
 
     def get_holdings(self):
@@ -139,6 +140,9 @@ class Portfolio:
         else:
             self.holdings.at[self.current_day, stock_ticker] = self.holdings.at[self.current_day, stock_ticker] + number_shares
 
+        self.add_order_log('buy', stock_ticker, number_shares)
+        return
+
 
     # Add error management
     def remove_stock(self, stock_ticker, number_shares):
@@ -152,6 +156,7 @@ class Portfolio:
         elif self.holdings.at[self.current_day, stock_ticker] < number_shares:
             if abs(self.holdings.at[self.current_day, stock_ticker] - number_shares) < 0.0000001:
                 self.holdings.at[self.current_day, stock_ticker] = 0
+                self.add_order_log('sell', stock_ticker, number_shares)
                 return True
 
             print('\nERROR:Not enough shares to sell')
@@ -164,6 +169,8 @@ class Portfolio:
 
         if abs(self.holdings.at[self.current_day, stock_ticker]) < 0.0000001:
             self.holdings.at[self.current_day, stock_ticker] = 0
+
+        self.add_order_log('sell', stock_ticker, number_shares)
         return True
 
     def buy_stock_money(self, stock_ticker, money):
@@ -238,6 +245,23 @@ class Portfolio:
             self.update_day_holdings()
         return flag
 
+    def add_order_log(self, order_type, stock, shares):
+        order_log = {}
+        date = self.current_day
+        price = self.get_current_price(stock)
+
+        order_log['date'] = date
+        order_log['order_type'] = order_type
+        order_log['stock'] = stock
+        order_log['shares'] = shares
+        order_log['price'] = price
+        self.orders_log.append(order_log)
+
+    def get_order_log(self, company=None):
+        df = pd.DataFrame(self.orders_log)
+        if company is not None:
+            df = df.loc[df['stock']==company].reset_index(drop=True)
+        return df
 
     def __str__(self):
         print('\nI´m a portfolio')
