@@ -260,6 +260,8 @@ class Portfolio:
     def get_order_log(self, company=None):
         df = pd.DataFrame(self.orders_log)
         if company is not None:
+            if company not in self.holdings.columns.values:
+                return None
             df = df.loc[df['stock']==company].reset_index(drop=True)
         return df
 

@@ -60,6 +60,11 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
     df = df.sort_index(axis=1)
     return df
 
+def normalize_y(df):
+    normalized_df=(2*(df-df.min()))/(df.max()-df.min())
+    normalized_df -= 1
+    return normalized_df
+
 def add_ols(dataset,param,first_header,second_header):
 
     new_field_name = 'ols' + str(param)
@@ -80,6 +85,7 @@ def add_ols(dataset,param,first_header,second_header):
         else:
             subset = df.iloc[(n - parameter + 1):n + 1]
             if not subset.isnull().values.any():
+                subset = normalize_y(subset)
                 model = LinearRegression().fit(x_res, subset)
                 indicator_list.append(model.coef_[0])
             else:

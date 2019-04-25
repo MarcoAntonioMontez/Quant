@@ -11,7 +11,7 @@ class Strategy:
         self.dataset = dataset.copy()
         self.tradeable_tickers = tradeable_tickers
         self.portfolio = portfolio
-        self.available_strategies = ['crossing_averages']
+        self.available_strategies = ['crossing_averages','crossing_ols']
         if self.name not in self.available_strategies:
             raise Exception('Strategy not available')
 
@@ -29,6 +29,8 @@ class Strategy:
 
         if self.name == 'crossing_averages':
             self.crossing_averages()
+        elif self.name == 'crossing_ols':
+            self.crossing_ols()
         return self.order_list
 
     def get_name(self):
@@ -93,6 +95,38 @@ class Strategy:
         for ticker in self.tradeable_tickers:
             price = dm.get_value(ticker, adj_close, self.current_date, self.dataset, 1)
             ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
+            if not self.is_stock_in_portfolio(ticker):
+                if buy_signal(price,ticker):
+                    self.add_buy_order(ticker)
+            elif self.is_stock_in_portfolio(ticker):
+                if sell_signal(price,ticker):
+                    self.add_sell_order(ticker)
+
+
+    def crossing_ols(self):
+        indicators = ['Adj Close','ema50','ols50']
+        adj_close = 'Adj Close'
+        ema = 'ema50'
+        ols = 'ols50'
+
+        #if fields exist dont exist in data raise exception
+
+        def buy_signal(price, ticker):
+            if (price > ema_value) and (ols_value > 1):
+                return True
+            else:
+                return False
+
+        def sell_signal(price, ticker):
+            if (price < ema_value):
+                return True
+            else:
+                return False
+
+        for ticker in self.tradeable_tickers:
+            price = dm.get_value(ticker, adj_close, self.current_date, self.dataset, 1)
+            ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
+            ols_value = dm.get_value(ticker, ols, self.current_date, self.dataset, 1)
             if not self.is_stock_in_portfolio(ticker):
                 if buy_signal(price,ticker):
                     self.add_buy_order(ticker)
