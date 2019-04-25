@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from modules import data_manager as dm
 import math
+from sklearn.linear_model import LinearRegression
 
 
 #Loads csv and checks the type, ie: fundamentals, constituents, and performs adequate date formatting
@@ -38,7 +39,7 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
     """
 
     price_field= 'Adj Close'
-    ratios = ['ema', 'sma']
+    ratios = ['ema', 'sma','ols']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
@@ -48,14 +49,48 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
         print("\nError Ratio doesn´t exist.")
         return None
 
-    for first_level in first_level_headers:
+    for level in first_level_headers:
         if ratio_name =='sma':
-            df[first_level, new_field_name] = df[first_level, price_field].rolling(window=parameter).mean()
+            df[level, new_field_name] = df[level, price_field].rolling(window=parameter).mean()
         elif ratio_name == 'ema':
-            df[first_level, new_field_name] = df[first_level, price_field].ewm(span=parameter,adjust=False,min_periods=parameter).mean()
+            df[level, new_field_name] = df[level, price_field].ewm(span=parameter,adjust=False,min_periods=parameter).mean()
+        elif ratio_name == 'ols':
+            df = add_ols(df, parameter, level, price_field)
 
     df = df.sort_index(axis=1)
     return df
+
+def add_ols(dataset,param,first_header,second_header):
+
+    new_field_name = 'ols' + str(param)
+    subset = dataset[first_header, second_header]
+    df = subset
+
+    indicator_list = []
+    parameter = param
+    n = 0
+    length = len(df)
+
+    x = np.linspace(0, parameter, parameter) / parameter
+    x_res = x.reshape(-1, 1)
+
+    while n < length:
+        if n < parameter - 1:
+            indicator_list.append(np.nan)
+        else:
+            subset = df.iloc[(n - parameter + 1):n + 1]
+            if not subset.isnull().values.any():
+                model = LinearRegression().fit(x_res, subset)
+                indicator_list.append(model.coef_[0])
+            else:
+                indicator_list.append(np.nan)
+        n = n + 1
+
+    # print(len(df))
+
+    dataset[first_header, new_field_name] = np.array(indicator_list)
+    return dataset
+
 
 def delete_rows(df, n):
     """
@@ -67,14 +102,16 @@ def delete_rows(df, n):
     df = df.drop(df.index[0:(n)])
     return df
 
+
 def preprocess_table(df, ratios):
     """
     Adds ratios and trucates table
     :param df_path: The name of the file if in the same folder or the path to the file
-    :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
+    ratios = [{'ratio_name':'ema', 'parameter':20}, {'ratio_name':'ols', 'parameter':90}]
     """
-    max_parameter=0
+    max_parameter = 0
+    max_index = 0
 
     for ratio in ratios:
         ratio_name = ratio['ratio_name']
@@ -83,7 +120,9 @@ def preprocess_table(df, ratios):
         if parameter > max_parameter:
             max_parameter = parameter
 
-    df = df.drop(df.index[0:max_parameter])
+    if max_parameter > 0:
+        max_index = max_parameter - 1
+    df = df.drop(df.index[0:max_index])
     df = df.sort_index(axis=1)
     return df
 
