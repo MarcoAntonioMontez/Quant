@@ -3,6 +3,7 @@ import numpy as np
 from modules import data_manager as dm
 import math
 from sklearn.linear_model import LinearRegression
+import sklearn
 
 
 #Loads csv and checks the type, ie: fundamentals, constituents, and performs adequate date formatting
@@ -39,7 +40,7 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
     """
 
     price_field= 'Adj Close'
-    ratios = ['ema', 'sma','ols']
+    ratios = ['ema', 'sma','ols','std']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
@@ -54,6 +55,8 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
             df[level, new_field_name] = df[level, price_field].rolling(window=parameter).mean()
         elif ratio_name == 'ema':
             df[level, new_field_name] = df[level, price_field].ewm(span=parameter,adjust=False,min_periods=parameter).mean()
+        elif ratio_name =='std':
+            df = add_std(df, parameter, level, price_field)
         elif ratio_name == 'ols':
             df = add_ols(df, parameter, level, price_field)
 
@@ -67,11 +70,13 @@ def normalize_y(df):
 
 def add_ols(dataset,param,first_header,second_header):
 
-    new_field_name = 'ols' + str(param)
+    new_ols_field_name = 'ols' + str(param)
+    new_ols_error_field_name = 'ols' + str(param) + 'error'
     subset = dataset[first_header, second_header]
     df = subset
 
-    indicator_list = []
+    ols_list = []
+    error_list = []
     parameter = param
     n = 0
     length = len(df)
@@ -81,20 +86,54 @@ def add_ols(dataset,param,first_header,second_header):
 
     while n < length:
         if n < parameter - 1:
-            indicator_list.append(np.nan)
+            ols_list.append(np.nan)
+            error_list.append(np.nan)
         else:
             subset = df.iloc[(n - parameter + 1):n + 1]
             if not subset.isnull().values.any():
                 subset = normalize_y(subset)
                 model = LinearRegression().fit(x_res, subset)
-                indicator_list.append(model.coef_[0])
+                ols_list.append(model.coef_[0])
+                y_predict = model.predict(x_res)
+                error = sklearn.metrics.mean_squared_error(subset, y_predict)
+                error_list.append(error)
             else:
-                indicator_list.append(np.nan)
+                ols_list.append(np.nan)
+                error_list.append(np.nan)
         n = n + 1
 
     # print(len(df))
+    dataset[first_header, new_ols_error_field_name] = np.array(error_list)
+    dataset[first_header, new_ols_field_name] = np.array(ols_list)
+    return dataset
 
-    dataset[first_header, new_field_name] = np.array(indicator_list)
+def add_std(dataset,param,first_header,second_header):
+
+    new_field_name = 'std' + str(param)
+    subset = dataset[first_header, second_header]
+    df = subset
+
+    std_list = []
+    parameter = param
+    n = 0
+    length = len(df)
+
+    x = np.linspace(0, parameter, parameter) / parameter
+
+    while n < length:
+        if n < parameter - 1:
+            std_list.append(np.nan)
+        else:
+            subset = df.iloc[(n - parameter + 1):n + 1]
+            if not subset.isnull().values.any():
+                subset = normalize_y(subset)
+                std_list.append(subset.var())
+            else:
+                std_list.append(np.nan)
+        n = n + 1
+
+    # print(len(df))
+    dataset[first_header, new_field_name] = np.array(std_list)
     return dataset
 
 

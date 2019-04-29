@@ -18,9 +18,10 @@ class Trader:
         self.end_date = dates_dict['end_date']
         self.dataset = self.truncate_dataset(dataset)
         self.end_date = self.dataset.index[-1].date()
-        self.current_day = self.start_date
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
-        self.strategy = Strategy(self.strategy_name,self.dataset, self.tickers, self.portfolio)
+        self.start_date = self.portfolio.start_day
+        self.current_day = self.start_date
+        self.strategy = Strategy(self.strategy_name, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
 
 

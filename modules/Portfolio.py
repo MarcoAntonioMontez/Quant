@@ -10,20 +10,22 @@ class Portfolio:
     def __init__(self, initial_capital, start_day, dataset):
         self.current_cash = initial_capital
         self.dataset = dataset
-        self.current_day = pd.to_datetime(start_day, format="%Y-%m-%d", errors='coerce').date()
         self.holdings = pd.DataFrame(columns=['Date'])
         self.holdings.set_index('Date', inplace=True)
         self.day_count = 0
         self.price_field='Adj Close'
         self.transaction_cost=0.003
         self.total_transaction_cost=0
-        self.update_day_holdings()
         self.length_dataset = len(dataset)
         self.net_worth = self.current_cash
-        self.start_day = start_day
+        self.start_day = self.find_inital_date(start_day, self.dataset)
+        self.current_day = self.start_day
         self.end_day = self.dataset.index[-1].date()
+        self.update_day_holdings()
         self.orders_log = []
+        self.open_orders = []
         # self.remaining_dates = self.create_date_index()
+
 
     def get_holdings(self):
         return self.holdings
@@ -40,6 +42,12 @@ class Portfolio:
 
     def get_transaction_costs(self):
         return self.total_transaction_costs
+
+    def find_inital_date(self, date, df):
+        index = df.index
+        while date not in index:
+            date = date + datetime.timedelta(1)
+        return date
 
     def last_row_date_updated(self, df, date):
         df = df.iloc[-1:].reset_index().copy()
@@ -92,6 +100,7 @@ class Portfolio:
         self.holdings.at[self.current_day, '_cash'] = self.current_cash
         self.net_worth = self.calc_net_worth()
         self.holdings.at[self.current_day, '_net worth'] = self.net_worth
+        #update open orders
         return
 
     # def create_date_index(self):
@@ -257,9 +266,9 @@ class Portfolio:
         order_log['price'] = price
         self.orders_log.append(order_log)
 
-    def get_order_log(self, company=None):
+    def get_order_log(self, company=False):
         df = pd.DataFrame(self.orders_log)
-        if company is not None:
+        if company:
             if company not in self.holdings.columns.values:
                 return None
             df = df.loc[df['stock']==company].reset_index(drop=True)
