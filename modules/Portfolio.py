@@ -21,9 +21,9 @@ class Portfolio:
         self.start_day = self.find_inital_date(start_day, self.dataset)
         self.current_day = self.start_day
         self.end_day = self.dataset.index[-1].date()
-        self.update_day_holdings()
         self.orders_log = []
         self.open_orders = []
+        self.update_day_holdings()
         # self.remaining_dates = self.create_date_index()
 
 
@@ -100,6 +100,7 @@ class Portfolio:
         self.holdings.at[self.current_day, '_cash'] = self.current_cash
         self.net_worth = self.calc_net_worth()
         self.holdings.at[self.current_day, '_net worth'] = self.net_worth
+        self.update_open_orders()
         #update open orders
         return
 
@@ -163,7 +164,7 @@ class Portfolio:
             print('\nERROR:Nan value for number of shares')
             return False
         elif self.holdings.at[self.current_day, stock_ticker] < number_shares:
-            if abs(self.holdings.at[self.current_day, stock_ticker] - number_shares) < 0.0000001:
+            if abs(self.holdings.at[self.current_day, stock_ticker] - number_shares) < 0.0001:
                 self.holdings.at[self.current_day, stock_ticker] = 0
                 self.add_order_log('sell', stock_ticker, number_shares)
                 return True
@@ -176,7 +177,7 @@ class Portfolio:
         else:
             self.holdings.at[self.current_day, stock_ticker] = self.holdings.at[self.current_day, stock_ticker] - number_shares
 
-        if abs(self.holdings.at[self.current_day, stock_ticker]) < 0.0000001:
+        if abs(self.holdings.at[self.current_day, stock_ticker]) < 0.0001:
             self.holdings.at[self.current_day, stock_ticker] = 0
 
         self.add_order_log('sell', stock_ticker, number_shares)
@@ -204,7 +205,7 @@ class Portfolio:
             self.add_stock(stock_ticker,real_number_shares)
             self.total_transaction_cost = self.total_transaction_cost + transaction_cost
             return True
-        elif abs(total_cost - self.current_cash) < 0.000001:
+        elif abs(total_cost - self.current_cash) < 0.0001:
             total_cost = self.current_cash
             self.current_cash = self.current_cash - total_cost
             self.add_stock(stock_ticker, real_number_shares)
@@ -264,7 +265,13 @@ class Portfolio:
         order_log['stock'] = stock
         order_log['shares'] = shares
         order_log['price'] = price
+        order_log['max_price'] = price
         self.orders_log.append(order_log)
+
+        if order_type == 'buy':
+            self.add_open_order(order_log)
+        elif order_type == 'sell':
+            self.remove_open_order(stock)
 
     def get_order_log(self, company=False):
         df = pd.DataFrame(self.orders_log)
@@ -273,6 +280,32 @@ class Portfolio:
                 return None
             df = df.loc[df['stock']==company].reset_index(drop=True)
         return df
+
+    def add_open_order(self, order_log):
+        self.open_orders.append(order_log)
+
+    def remove_open_order(self,stock):
+        orders_list = self.open_orders
+        for order in orders_list:
+            if order['stock'] == stock:
+                orders_list.remove(order)
+        return
+
+    def get_open_orders(self, company=False):
+        df = pd.DataFrame(self.open_orders)
+        if company:
+            if company not in self.holdings.columns.values:
+                return None
+            df = df.loc[df['stock']==company].reset_index(drop=True)
+        return df
+
+    def update_open_orders(self):
+        open_orders = self.open_orders
+        for order in open_orders:
+            current_price = dm.get_value(order['stock'], 'Adj Close', self.current_day, self.dataset, 1)
+            if order['max_price'] < current_price:
+                order['max_price'] = current_price
+        return
 
     def __str__(self):
         print('\nI´m a portfolio')

@@ -77,6 +77,34 @@ class Strategy:
         order = {'Date': self.current_date, 'Type': 'sell', 'Stock': ticker }
         self.order_list.append(order)
 
+    def initial_stop_loss(self, ticker, value):
+        #value = 0.2 means 20% stop loss
+        open_orders = self.portfolio.open_orders
+        for order in open_orders:
+            if order['stock'] == ticker:
+                buy_price = order['price']
+                price = dm.get_value(ticker, 'Adj Close', self.current_date, self.dataset, 1)
+                loss = (buy_price - price) / buy_price
+                if loss >= value:
+                    return True
+                else:
+                    return False
+        raise Exception('Initial_stop_loss - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
+
+    def trailing_stop_loss(self, ticker, value):
+        #value = 0.2 means 20% stop loss
+        open_orders = self.portfolio.open_orders
+        for order in open_orders:
+            if order['stock'] == ticker:
+                max_price = order['max_price']
+                price = dm.get_value(ticker, 'Adj Close', self.current_date, self.dataset, 1)
+                loss = (max_price - price) / max_price
+                if loss >= value:
+                    return True
+                else:
+                    return False
+        raise Exception('trailing_stop_loss() - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
+
     def crossing_averages(self):
         indicators = ['Adj Close','ema50']
         adj_close = 'Adj Close'
