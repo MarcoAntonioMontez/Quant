@@ -21,7 +21,7 @@ class Trader:
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
         self.start_date = self.portfolio.start_day
         self.current_day = self.start_date
-        self.strategy = Strategy(self.strategy_name, self.dataset, self.tickers, self.portfolio)
+        self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
 
 

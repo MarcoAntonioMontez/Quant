@@ -6,8 +6,9 @@ from modules import Portfolio as Porfolio
 
 
 class Strategy:
-    def __init__(self, name, dataset, tradeable_tickers, portfolio):
+    def __init__(self, name, params,dataset, tradeable_tickers, portfolio):
         self.name = name
+        self.params = params
         self.dataset = dataset.copy()
         self.tradeable_tickers = tradeable_tickers
         self.portfolio = portfolio
@@ -27,15 +28,15 @@ class Strategy:
         self.order_list = []
 
         if self.name == 'crossing_averages':
-            self.crossing_averages()
+            self.crossing_averages(self.params)
         elif self.name == 'crossing_ols':
-            self.crossing_ols()
+            self.crossing_ols(self.params)
         elif self.name =='double_crossing_averages':
-            self.double_crossing_averages()
+            self.double_crossing_averages(self.params)
         elif self.name =='double_ema_ols':
-            self.double_ema_ols()
+            self.double_ema_ols(self.params)
         elif self.name == 'double_ema_double_ols':
-            self.double_ema_double_ols()
+            self.double_ema_double_ols(self.params)
         return self.order_list
 
     def get_name(self):
@@ -105,7 +106,7 @@ class Strategy:
                     return False
         raise Exception('trailing_stop_loss() - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
 
-    def crossing_averages(self):
+    def crossing_averages(self,params):
         indicators = ['Adj Close','ema50']
         adj_close = 'Adj Close'
         ema = 'ema50'
@@ -137,7 +138,7 @@ class Strategy:
                     self.add_sell_order(ticker)
 
 
-    def crossing_ols(self):
+    def crossing_ols(self,params):
         indicators = ['Adj Close','ema50','ols50']
         adj_close = 'Adj Close'
         ema = 'ema50'
@@ -168,7 +169,7 @@ class Strategy:
             elif self.is_stock_in_portfolio(ticker):
                 if sell_signal(price,ticker):
                     self.add_sell_order(ticker)
-    def double_crossing_averages(self):
+    def double_crossing_averages(self,params):
         indicators = ['Adj Close','ema100','ema20']
         adj_close = 'Adj Close'
         big_ema = 'ema100'
@@ -200,34 +201,35 @@ class Strategy:
                 if sell_signal(price,ticker):
                     self.add_sell_order(ticker)
 
-    def double_ema_ols(self):
+    def double_ema_ols(self,params):
         adj_close = 'Adj Close'
-        big_ema = 'ema100'
-        small_ema = 'ema20'
-        ols = 'ols100'
+        big_ema = 'ema' + str(params['big_ema'])
+        small_ema = 'ema' + str(params['small_ema'])
+        init_stop_loss_value = params['init_stop_loss']
+        trailing_stop_loss_value = params['trailing_stop_loss']
+        ols = 'ols' + str(params['ols'])
         ols_error = ols + 'error'
+        ols_buy = params['ols_buy']
+        ols_error_buy = params['ols_error_buy']
         indicators = [adj_close,big_ema,small_ema,ols,ols_error]
         self.check_indicators(indicators)
 
         #if fields exist dont exist in data raise exception
 
         def buy_signal(price, ticker):
-            if (small_ema_value > big_ema_value) and (ols_value > 1) and (ols_error_value < 0.04):
+            if (small_ema_value > big_ema_value) and (ols_value > ols_buy) and (ols_error_value < ols_error_buy):
                 return True
             else:
                 return False
 
         def sell_signal(price, ticker):
-            if (small_ema_value < big_ema_value):
+            if (small_ema_value < big_ema_value) or self.trailing_stop_loss(ticker, trailing_stop_loss_value) or \
+                    self.initial_stop_loss(ticker, init_stop_loss_value):
                 return True
             else:
                 return False
 
         for ticker in self.tradeable_tickers:
-            # try:
-            #     ols_error_value = dm.get_value(ticker, ols_error, self.current_date, self.dataset, 1)
-            # except:
-            #     continue
             ols_error_value = dm.get_value(ticker, ols_error, self.current_date, self.dataset, 1)
             price = dm.get_value(ticker, adj_close, self.current_date, self.dataset, 1)
             big_ema_value = dm.get_value(ticker, big_ema, self.current_date, self.dataset, 1)
@@ -241,7 +243,7 @@ class Strategy:
                 if sell_signal(price,ticker):
                     self.add_sell_order(ticker)
 
-    def double_ema_double_ols(self):
+    def double_ema_double_ols(self,params):
         indicators = ['Adj Close','ema100','ema20','ols100','ols50']
         adj_close = 'Adj Close'
         big_ema = 'ema100'
