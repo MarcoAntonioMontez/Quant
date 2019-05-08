@@ -221,3 +221,8 @@ def truncate(number, digits) -> float:
     stepper = pow(10.0, digits)
     return math.trunc(stepper * number) / stepper
 
+def roi(company, dataset):
+    start_price = dataset[company, 'Adj Close'].iloc[0]
+    end_price = dataset[company, 'Adj Close'].iloc[-1]
+    return ((end_price - start_price) / start_price)
+

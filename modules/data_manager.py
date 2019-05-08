@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from random import sample
+import math
 
 #Loads csv and checks the type, ie: fundamentals, constituents, and performs adequate date formatting
 
@@ -103,6 +104,23 @@ def data_between_dates(start_date, end_date, dataset, dataset_type=0):
         return dataset.loc[start_date:end_date]
     elif (dataset_type == 2):
         return dataset.loc[(dataset['from'] > start_date) & (dataset['thru'] <= end_date)].reset_index(drop=True)
+
+def live_companies_between_dates(start_date, end_date, dataset, dataset_type):
+    if dataset_type != 1:
+        raise Exception('Only dataset_type = 1 (technical) has been implement')
+
+    df = data_between_dates(start_date, end_date, dataset, dataset_type)
+    all_companies = df.columns.levels[0]
+
+    live_companies = []
+
+    for company in all_companies:
+        start_price = math.isnan(df.iloc[0][company,'Adj Close'])
+        end_price = math.isnan(df.iloc[-1][company,'Adj Close'])
+        if not (end_price or start_price):
+            live_companies.append(company)
+
+    return live_companies
 
 def equal_date(date, dataset, dataset_type=0):
     """
