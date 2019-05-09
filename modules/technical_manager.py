@@ -5,32 +5,6 @@ import math
 from sklearn.linear_model import LinearRegression
 import sklearn
 
-
-#Loads csv and checks the type, ie: fundamentals, constituents, and performs adequate date formatting
-
-# def add_ratio(df, new_field_name, ratio_name, parameter=1):
-#     """
-#     Loads csv into a dataframe
-#     :param df_path: The name of the file if in the same folder or the path to the file
-#     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
-#     :returns: returns a Pandas Dataframe with the data of the csv requested
-#     """
-#
-#     price_field= 'Adj Close'
-#
-#     ratios = ['ema', 'sma']
-#
-#     if ratio_name not in ratios:
-#         print("\nError Ratio doesn´t exist.")
-#         return None
-#
-#     if ratio_name =='sma':
-#         df[new_field_name]=df[price_field].rolling(window=parameter).mean()
-#     elif ratio_name == 'ema':
-#         df[new_field_name] = df[price_field].ewm(span=parameter,adjust=False,min_periods=parameter).mean()
-#
-#     return df
-
 def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
     """
     Loads csv into a dataframe
@@ -47,7 +21,7 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
         new_field_name = ratio_name + str(parameter)
 
     if ratio_name not in ratios:
-        print("\nError Ratio doesn´t exist.")
+        print("\nError Ratio doesn't exist.")
         return None
 
     for level in first_level_headers:
@@ -218,7 +192,7 @@ def win_rate(order_df):
     return win_rate,win_list
 
 
-def truncate(number, digits) -> float:
+def truncate(number, digits):
     stepper = pow(10.0, digits)
     return math.trunc(stepper * number) / stepper
 

@@ -308,7 +308,7 @@ class Portfolio:
         return
 
     def __str__(self):
-        print('\nI´m a portfolio')
+        print('\nIm a portfolio')
         return
 
 
