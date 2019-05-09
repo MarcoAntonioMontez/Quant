@@ -64,7 +64,7 @@ def data_company(company, dataset, dataset_type=0):
 
 def data_companies(company_list, dataset, dataset_type=0):
     """
-    Returns all available data from a company inside a certain dataset.
+    Returns all available data from several companies nside a certain dataset.
     :param company: If the dataset is the fundamental data or the stock price data then this variable must be the ticker of the company. Otherwise, it must be the name of the company.
     :param dataset: Pandas Dataframe with the data to process
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.

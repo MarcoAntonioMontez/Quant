@@ -217,12 +217,18 @@ def win_rate(order_df):
     win_rate = truncate(win_rate,3)
     return win_rate,win_list
 
+
 def truncate(number, digits) -> float:
     stepper = pow(10.0, digits)
     return math.trunc(stepper * number) / stepper
+
 
 def roi(company, dataset):
     start_price = dataset[company, 'Adj Close'].iloc[0]
     end_price = dataset[company, 'Adj Close'].iloc[-1]
     return ((end_price - start_price) / start_price)
+
+
+def mean(lst):
+    return sum(lst) / len(lst)
 
