@@ -107,12 +107,10 @@ class Strategy:
         raise Exception('trailing_stop_loss() - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
 
     def crossing_averages(self,params):
-        indicators = ['Adj Close','ema50']
+        ema = 'ema' + str(params['big_ema'])
+        indicators = ['Adj Close', ema]
         adj_close = 'Adj Close'
-        ema = 'ema50'
         self.check_indicators(indicators)
-
-
         #if fields exist dont exist in data raise exception
 
         def buy_signal(price, ticker):
@@ -278,6 +276,13 @@ class Strategy:
             elif self.is_stock_in_portfolio(ticker):
                 if sell_signal(price,ticker):
                     self.add_sell_order(ticker)
+
+    def cross(self, signal_a,signal_b):
+        prev_day =
+        today = self.current_date
+        signal_a_0 =
+        signal_b_0 =
+
 
 
 

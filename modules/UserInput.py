@@ -6,6 +6,10 @@ class UserInput:
         self.tickers = inputs['tickers']
         self.strategy = inputs['strategy']
         self.strategy_params = inputs['strategy_params']
+        self.stop_loss_type = self.strategy_params['stop_loss_type']
+        self.stop_loss_parameter = self.strategy_params['stop_loss_parameter']
+        self.take_profit_type = self.strategy_params['take_profit_type']
+        self.take_profit_parameter = self.strategy_params['take_profit_parameter']
 
     def __str__(self):
         # print('\n -- User Input Class -- ')

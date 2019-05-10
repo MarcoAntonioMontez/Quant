@@ -42,6 +42,7 @@ def normalize_y(df):
     normalized_df -= 1
     return normalized_df
 
+
 def add_ols(dataset,param,first_header,second_header):
 
     new_ols_field_name = 'ols' + str(param)

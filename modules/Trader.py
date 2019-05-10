@@ -5,6 +5,7 @@ from modules import data_manager as dm
 from modules.Portfolio import Portfolio
 from modules.Strategy import Strategy
 from modules import UserInput
+from modules.Order import Order
 
 
 class Trader:
@@ -76,10 +77,16 @@ class Trader:
         for order in orders:
             if order['Type'] == 'buy':
                 position = min(self.portfolio.current_cash, self.portfolio.net_worth/len(self.tickers))
-                self.portfolio.order_money(order['Type'], order['Stock'], position)
+                new_order = Order(self, order['Stock'], position = position)
+                self.portfolio.add_open_order(new_order)
+                print('added open_order')
+                # self.portfolio.order_money(order['Type'], order['Stock'], position)
             elif order['Type']=='sell':
-                total_stock_shares = self.portfolio.holdings.at[self.portfolio.current_day, order['Stock']]
-                self.portfolio.order(order['Type'], order['Stock'], total_stock_shares)
+                # total_stock_shares = self.portfolio.holdings.at[self.portfolio.current_day, order['Stock']]
+                open_order = self.portfolio.get_open_order(order['Stock'])
+                open_order.sell_stock()
+                self.portfolio.close_order(order['Stock'])
+                print('removed open_order')
         return orders
 
     def next_day(self):
