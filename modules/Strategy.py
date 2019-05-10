@@ -107,19 +107,42 @@ class Strategy:
         raise Exception('Initial_stop_loss - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
 
     def trailing_stop_loss(self, ticker,params):
-        value = params['trailing_stop_parameter']
-        #value = 0.2 means 20% stop loss
         open_orders = self.portfolio.open_orders
-        for order in open_orders:
-            if order.stock == ticker:
-                max_price = order.max_price
-                price = dm.get_value(ticker, self.price_field, self.current_date, self.dataset, 1)
-                loss = (max_price - price) / max_price
-                if loss >= value:
-                    return True
-                else:
-                    return False
-        raise Exception('trailing_stop_loss() - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
+        value = params['trailing_stop_parameter']
+        stop_type = params['trailing_stop_type']
+        if stop_type == 'percentage':
+            for order in open_orders:
+                if order.stock == ticker:
+                    max_price = order.max_price
+                    price = dm.get_value(ticker, self.price_field, self.current_date, self.dataset, 1)
+                    loss = (max_price - price) / max_price
+                    if loss >= value:
+                        return True
+                    else:
+                        return False
+            raise Exception(
+                'trailing_stop_loss() - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
+        elif stop_type.startswith('atr'):
+            for order in open_orders:
+                if order.stock == ticker:
+                    atr = dm.get_value(ticker, stop_type, self.current_date, self.dataset, 1)
+                    max_price = order.max_price
+                    price = dm.get_value(ticker, self.price_field, self.current_date, self.dataset, 1)
+                    loss = (max_price - price)
+                    if loss >= atr * value:
+                        return True
+                    else:
+                        return False
+            raise Exception(
+                'trailing_stop_loss() - Ticker is not in open_orders!! Ticker[' + str(ticker) + '] not available!!')
+        else:
+            raise Exception('Trailing stop type: ' + str(params['trailing_stop_type']) + ' doesnt exit!')
+
+
+
+
+
+
 
     def crossing_averages(self,params):
         ema = 'ema' + str(params['big_ema'])
@@ -140,7 +163,7 @@ class Strategy:
             trailing_stop = self.trailing_stop_loss(ticker,params)
             take_profit = self.take_profit(price,order)
             exit_indicator = (self.cross(ticker,close,ema) == 'down')
-            if  stop_loss or trailing_stop or take_profit or exit_indicator :
+            if stop_loss or trailing_stop or take_profit or exit_indicator:
                 return True
             else:
                 return False

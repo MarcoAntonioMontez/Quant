@@ -69,7 +69,7 @@ class Order:
         self.exit_type = exit_type
 
     def calc_stop_loss(self, price, signal_type, parameter):
-        if signal_type == 'atr':
+        if signal_type.startswith('atr'):
             indicator_value = self.portfolio.get_value(self.stock, signal_type)
             if indicator_value is None:
                 raise Exception('Invalid indicator_value for signal_type: atr')
@@ -82,7 +82,7 @@ class Order:
         return stop_level
 
     def calc_take_profit(self, price, signal_type, parameter):
-        if signal_type == 'atr':
+        if signal_type.startswith('atr'):
             indicator_value = self.portfolio.get_value(self.stock, signal_type)
             if indicator_value is None:
                 raise Exception('Invalid indicator_value for signal_type: atr')
