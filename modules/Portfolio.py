@@ -24,8 +24,14 @@ class Portfolio:
         self.orders_log = []
         self.open_orders = []
         self.update_day_holdings()
+        self.trader = None
+        self.user_input = None
         # self.remaining_dates = self.create_date_index()
 
+    def set_trader(self,trader):
+        self.trader = trader
+        self.user_input = trader.user_input
+        self.price_field = self.user_input.strategy_params['close_name']
 
     def get_holdings(self):
         return self.holdings
@@ -40,8 +46,10 @@ class Portfolio:
         price = dm.get_value(ticker, self.price_field, self.current_day, self.dataset,  1)
         return price
 
-    def get_value(self, ticker,field):
-        value = dm.get_value(ticker, field, self.current_day, self.dataset,  1)
+    def get_value(self, ticker,field, date = None):
+        if date is None:
+            date = self.current_day
+        value = dm.get_value(ticker, field, date, self.dataset,  1)
         return value
 
     def get_transaction_costs(self):
@@ -120,8 +128,18 @@ class Portfolio:
         next_day = df.index[min(idx + 1, self.length_dataset - 1)]
         next_day = pd.to_datetime(next_day, format="%Y-%m-%d", errors='coerce').date()
         return next_day
-        # next_day = self.remaining_dates.pop(0)
-        # return next_day
+
+    def get_prev_day(self):
+        df = self.dataset
+
+        if self.current_day == self.start_day:
+            print('\nLast day of portfolio simulatio\n No more days to go')
+            return None
+
+        idx = df.index.get_loc(self.current_day)
+        prev_day = df.index[min(idx - 1, self.length_dataset - 1)]
+        prev_day = pd.to_datetime(prev_day, format="%Y-%m-%d", errors='coerce').date()
+        return prev_day
 
     def init_day_holdings(self):
         new_row = self.last_row_date_updated(self.holdings,self.current_day)

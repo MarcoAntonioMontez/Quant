@@ -20,6 +20,7 @@ class Trader:
         self.dataset = self.truncate_dataset(dataset)
         self.end_date = self.dataset.index[-1].date()
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
+        self.portfolio.set_trader(self)
         self.start_date = self.portfolio.start_day
         self.current_day = self.start_date
         self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
@@ -79,14 +80,14 @@ class Trader:
                 position = min(self.portfolio.current_cash, self.portfolio.net_worth/len(self.tickers))
                 new_order = Order(self, order['Stock'], position = position)
                 self.portfolio.add_open_order(new_order)
-                print('added open_order')
+                # print('added open_order')
                 # self.portfolio.order_money(order['Type'], order['Stock'], position)
             elif order['Type']=='sell':
                 # total_stock_shares = self.portfolio.holdings.at[self.portfolio.current_day, order['Stock']]
                 open_order = self.portfolio.get_open_order(order['Stock'])
                 open_order.sell_stock()
                 self.portfolio.close_order(order['Stock'])
-                print('removed open_order')
+                # print('removed open_order')
         return orders
 
     def next_day(self):

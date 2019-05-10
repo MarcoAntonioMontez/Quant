@@ -4,24 +4,23 @@ from modules import data_manager as dm
 import math
 from sklearn.linear_model import LinearRegression
 import sklearn
+import talib
 
-def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
+def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     """
     Loads csv into a dataframe
     :param df_path: The name of the file if in the same folder or the path to the file
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
     """
-
-    price_field= 'Adj Close'
-    ratios = ['ema', 'sma','ols','std']
+    ratios = ['ema', 'sma','ols','std','atr']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
         new_field_name = ratio_name + str(parameter)
 
     if ratio_name not in ratios:
-        print("\nError Ratio doesn't exist.")
+        raise Exception("\nError Ratio doesn't exist.")
         return None
 
     for level in first_level_headers:
@@ -33,6 +32,8 @@ def add_ratio(df, ratio_name, parameter=1,new_field_name=-1):
             df = add_std(df, parameter, level, price_field)
         elif ratio_name == 'ols':
             df = add_ols(df, parameter, level, price_field)
+        elif ratio_name == 'atr':
+            df = add_atr(df, parameter, level)
 
     df = df.sort_index(axis=1)
     return df
@@ -42,6 +43,15 @@ def normalize_y(df):
     normalized_df -= 1
     return normalized_df
 
+def add_atr(dataset,param,first_header):
+    field_name = 'atr' + str(param)
+    df = dataset[first_header].copy()
+
+    atr = talib.ATR(df['High'].values, df['Low'].values, df['Close'].values, timeperiod=param)
+    column = pd.DataFrame(atr, index=df.index)
+
+    dataset[first_header, field_name] = column
+    return dataset
 
 def add_ols(dataset,param,first_header,second_header):
 
@@ -123,7 +133,7 @@ def delete_rows(df, n):
     return df
 
 
-def preprocess_table(df, ratios):
+def preprocess_table(df, ratios, price_field = 'Adj Close'):
     """
     Adds ratios and trucates table
     :param df_path: The name of the file if in the same folder or the path to the file
@@ -136,7 +146,7 @@ def preprocess_table(df, ratios):
     for ratio in ratios:
         ratio_name = ratio['ratio_name']
         parameter = ratio['parameter']
-        add_ratio(df, ratio_name, parameter)
+        add_ratio(df, ratio_name, price_field, parameter=parameter)
         if parameter > max_parameter:
             max_parameter = parameter
 
