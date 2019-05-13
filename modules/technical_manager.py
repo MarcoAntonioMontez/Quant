@@ -5,6 +5,7 @@ import math
 from sklearn.linear_model import LinearRegression
 import sklearn
 import talib
+from modules import ratios as ra
 
 def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     """
@@ -13,7 +14,7 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
     """
-    ratios = ['ema', 'sma','ols','std','atr']
+    ratios = ['ema', 'sma','ols','std','atr','aroon']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
@@ -34,6 +35,8 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
             df = add_ols(df, parameter, level, price_field)
         elif ratio_name == 'atr':
             df = add_atr(df, parameter, level)
+        elif ratio_name == 'aroon':
+            df = ra.add_aroon(df, parameter, level)
 
     df = df.sort_index(axis=1)
     return df
@@ -208,7 +211,7 @@ def roi_order(order):
     else:
         end_price = so_ratio * scale_out_price + (1 - so_ratio) * sell_price
         roi = (end_price - buy_price) / buy_price
-    return roi
+    return roi*100
 
 
 def roi_order_list(order_list):
@@ -237,3 +240,54 @@ def win_rate(order_list):
 def mean(lst):
     return sum(lst) / len(lst)
 
+def average(lst):
+    return sum(lst) / len(lst)
+
+def add_average_ols(dataset,first_header,second_header, divisions=5, length=100):
+    new_ols_field_name = 'ols' + str(length)
+    delays = np.linspace(0, length, num=divisions, dtype=int)
+    x = np.linspace(0, divisions, divisions) / divisions
+    x_res = x.reshape(-1, 1)
+
+    subset = dataset[first_header, second_header]
+    df = subset
+    values = []
+    ols_list=[]
+    length_dataset = length(df)
+
+    indexes = df.iloc[100:].index
+
+    for index in indexes:
+        for delay in delays:
+            prev_date = df.index[min(index - delay, length_dataset - 1)]
+            values.append(df.loc[prev_date])
+
+        array = np.asarray(values, dtype=float)
+        array = (array - min(array)) / (max(array) - min(array))
+        y_res = array.reshape(-1, 1)
+        model = LinearRegression().fit(x_res, y_res)
+        ols_list.append(model.coef_[0])
+
+    dataset[first_header, new_ols_field_name] = np.array(ols_list)
+
+
+        # average = average(values)
+
+    while n < length:
+        if n < parameter - 1:
+            ols_list.append(np.nan)
+            error_list.append(np.nan)
+        else:
+            subset = df.iloc[(n - parameter + 1):n + 1]
+            if not subset.isnull().values.any():
+                subset = normalize_y(subset)
+                model = LinearRegression().fit(x_res, subset)
+                ols_list.append(model.coef_[0])
+                y_predict = model.predict(x_res)
+                error = sklearn.metrics.mean_squared_error(subset, y_predict)
+                error_list.append(error)
+            else:
+                ols_list.append(np.nan)
+                error_list.append(np.nan)
+        n = n + 1
+    return

@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 from modules import data_manager as dm
 from modules import Portfolio as Porfolio
+from modules import indicators as ind
 
 
 class Strategy:
@@ -12,7 +13,7 @@ class Strategy:
         self.dataset = dataset.copy()
         self.tradeable_tickers = tradeable_tickers
         self.portfolio = portfolio
-        self.available_strategies = ['crossing_averages','crossing_ols','double_crossing_averages','double_ema_ols','double_ema_double_ols']
+        self.available_strategies = ['crossing_averages','modular_strategy','crossing_ols','double_crossing_averages','double_ema_ols','double_ema_double_ols']
         if self.name not in self.available_strategies:
             raise Exception('Strategy not available')
 
@@ -22,8 +23,7 @@ class Strategy:
         self.order_list = []
         self.price_field = params['close_name']
 
-
-    def simulate_day(self,date,new_tickers = []):
+    def simulate_day(self, date, new_tickers=[]):
         if new_tickers:
             self.tradeable_tickers = new_tickers
         self.current_date = pd.to_datetime(date, format="%Y-%m-%d", errors='coerce').date()
@@ -31,6 +31,8 @@ class Strategy:
 
         if self.name == 'crossing_averages':
             self.crossing_averages(self.params)
+        elif self.name == 'modular_strategy':
+            self.modular_strategy(self.params)
         elif self.name == 'crossing_ols':
             self.crossing_ols(self.params)
         elif self.name =='double_crossing_averages':
@@ -143,14 +145,11 @@ class Strategy:
             raise Exception('Trailing stop type: ' + str(params['trailing_stop_type']) + ' doesnt exit!')
 
 
-
-
     def crossing_averages(self,params):
         ema = 'ema' + str(params['big_ema'])
         indicators = [self.price_field, ema]
         close = self.price_field
         self.check_indicators(indicators)
-        #if fields exist dont exist in data raise exception
         order = None
 
         def buy_signal(price, ticker):
@@ -192,6 +191,66 @@ class Strategy:
             price = dm.get_value(ticker, close, self.current_date, self.dataset, 1)
             ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
             if not self.is_stock_in_portfolio(ticker):
+                if buy_signal(price,ticker):
+                    self.add_buy_order(ticker)
+            elif self.is_stock_in_portfolio(ticker):
+                order = self.portfolio.get_open_order(ticker)
+                sell_dict = sell_signal(price,ticker,order)
+                if sell_dict['flag']:
+                    self.add_sell_order(ticker,sell_dict['exit_type'])
+                elif scale_out_signal(price, order):
+                    self.add_scale_out_order(ticker)
+
+
+    def modular_strategy(self,params):
+        ema = 'ema' + str(params['big_ema'])
+        entry_indicator = params['entry_indicator']
+        baseline_indicator = params['baseline_type'] + str(params['baseline_period'])
+        indicators = [self.price_field]
+        close = self.price_field
+        self.check_indicators(indicators)
+        order = None
+
+        def buy_signal(price, ticker):
+            # if ind.indicator_cross(ticker, entry_indicator, params) == 'up' and ind.above_baseline(price, baseline_value):
+            if ind.indicator_cross(self,ticker, entry_indicator, params) == 'up' and price >= ema_value:
+                return True
+            else:
+                return False
+
+        def sell_signal(price, ticker, order):
+            sell_dict = {'flag':False, 'exit_type': None}
+            below_baseline = price < ema_value
+            stop_loss = self.stop_loss(price,order)
+            trailing_stop = self.trailing_stop_loss(ticker,params)
+            exit_indicator = (self.cross(ticker,close,ema) == 'down')
+            if stop_loss or trailing_stop or exit_indicator or below_baseline:
+                if stop_loss:
+                    sell_dict['exit_type']='stop_loss'
+                elif trailing_stop:
+                    sell_dict['exit_type'] = 'trailing_stop'
+                elif exit_indicator:
+                    sell_dict['exit_type'] = 'exit_indicator'
+                elif below_baseline:
+                    sell_dict['exit_type'] = 'baseline'
+                sell_dict['flag'] = True
+                return sell_dict
+            else:
+                return sell_dict
+
+        def scale_out_signal(price, order):
+            if order.state() == 'open':
+                take_profit = self.take_profit(price, order)
+                if take_profit:
+                    return True
+            else:
+                return False
+
+        for ticker in self.tradeable_tickers:
+            price = dm.get_value(ticker, close, self.current_date, self.dataset, 1)
+            ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
+            if not self.is_stock_in_portfolio(ticker):
+                baseline_value = dm.get_value(ticker, baseline_indicator, self.current_date, self.dataset, 1)
                 if buy_signal(price,ticker):
                     self.add_buy_order(ticker)
             elif self.is_stock_in_portfolio(ticker):
@@ -361,8 +420,6 @@ class Strategy:
             return 'down'
         else:
             return 'no_cross'
-
-
 
 
 

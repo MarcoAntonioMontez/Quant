@@ -141,6 +141,18 @@ class Portfolio:
         prev_day = pd.to_datetime(prev_day, format="%Y-%m-%d", errors='coerce').date()
         return prev_day
 
+    def get_prev_index(self, period=1):
+        df = self.dataset
+
+        if self.current_day == self.start_day:
+            print('\nLast day of portfolio simulatio\n No more days to go')
+            return None
+
+        idx = df.index.get_loc(self.current_day)
+        prev_day = df.index[min(idx - 1, self.length_dataset - period)]
+        prev_day = pd.to_datetime(prev_day, format="%Y-%m-%d", errors='coerce').date()
+        return prev_day
+
     def init_day_holdings(self):
         new_row = self.last_row_date_updated(self.holdings,self.current_day)
         self.holdings = pd.concat([self.holdings, new_row])
