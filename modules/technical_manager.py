@@ -32,11 +32,13 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
         elif ratio_name =='std':
             df = add_std(df, parameter, level, price_field)
         elif ratio_name == 'ols':
-            df = add_ols(df, parameter, level, price_field)
+            df = add_average_ols(df, level, 'ema100', divisions=10, length=parameter)
         elif ratio_name == 'atr':
             df = add_atr(df, parameter, level)
         elif ratio_name == 'aroon':
             df = ra.add_aroon(df, parameter, level)
+
+
 
     df = df.sort_index(axis=1)
     return df
@@ -243,51 +245,35 @@ def mean(lst):
 def average(lst):
     return sum(lst) / len(lst)
 
-def add_average_ols(dataset,first_header,second_header, divisions=5, length=100):
-    new_ols_field_name = 'ols' + str(length)
+
+def add_average_ols(dataset, first_header, second_header, divisions=10, length=100):
+    new_ols_field_name = 'ols' + str(length) + '/' + str(divisions)
     delays = np.linspace(0, length, num=divisions, dtype=int)
-    x = np.linspace(0, divisions, divisions) / divisions
+    x = np.linspace(0, length, divisions) / length
     x_res = x.reshape(-1, 1)
 
-    subset = dataset[first_header, second_header]
-    df = subset
+    subset = dataset[first_header, second_header].copy()
+    df = subset.reset_index()
     values = []
-    ols_list=[]
-    length_dataset = length(df)
+    ols_list = []
+    length_dataset = len(df)
+    empty_list = np.empty([length, 1])
+    empty_list.fill(np.nan)
 
-    indexes = df.iloc[100:].index
-
-    for index in indexes:
+    for i in range(length, length_dataset):
+        values = []
         for delay in delays:
-            prev_date = df.index[min(index - delay, length_dataset - 1)]
-            values.append(df.loc[prev_date])
-
+            prev_index = i - delay
+            values.insert(0, df[first_header, second_header].loc[prev_index])
         array = np.asarray(values, dtype=float)
-        array = (array - min(array)) / (max(array) - min(array))
-        y_res = array.reshape(-1, 1)
-        model = LinearRegression().fit(x_res, y_res)
-        ols_list.append(model.coef_[0])
-
-    dataset[first_header, new_ols_field_name] = np.array(ols_list)
-
-
-        # average = average(values)
-
-    while n < length:
-        if n < parameter - 1:
-            ols_list.append(np.nan)
-            error_list.append(np.nan)
+        if not np.isnan(array).any():
+            array = (array - min(array)) / (max(array) - min(array))
+            y_res = array.reshape(-1, 1)
+            model = LinearRegression().fit(x_res, y_res)
+            ols_list.append(model.coef_[0])
         else:
-            subset = df.iloc[(n - parameter + 1):n + 1]
-            if not subset.isnull().values.any():
-                subset = normalize_y(subset)
-                model = LinearRegression().fit(x_res, subset)
-                ols_list.append(model.coef_[0])
-                y_predict = model.predict(x_res)
-                error = sklearn.metrics.mean_squared_error(subset, y_predict)
-                error_list.append(error)
-            else:
-                ols_list.append(np.nan)
-                error_list.append(np.nan)
-        n = n + 1
-    return
+            ols_list.append(np.nan)
+    #     display(empty_list.tolist())
+    ols_list = list(empty_list.tolist() + ols_list)
+    dataset[first_header, new_ols_field_name] = np.array(ols_list)
+    return dataset
