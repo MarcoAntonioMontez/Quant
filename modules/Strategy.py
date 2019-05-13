@@ -76,8 +76,12 @@ class Strategy:
         order = {'Date': self.current_date, 'Type': 'buy', 'Stock': ticker }
         self.order_list.append(order)
 
-    def add_sell_order(self, ticker):
-        order = {'Date': self.current_date, 'Type': 'sell', 'Stock': ticker }
+    def add_sell_order(self, ticker, exit_type):
+        order = {'Date': self.current_date, 'Type': 'sell', 'Stock': ticker, 'exit_type': exit_type}
+        self.order_list.append(order)
+
+    def add_scale_out_order(self, ticker):
+        order = {'Date': self.current_date, 'Type': 'scale_out', 'Stock': ticker }
         self.order_list.append(order)
 
     def stop_loss(self, price, order ):
@@ -141,9 +145,6 @@ class Strategy:
 
 
 
-
-
-
     def crossing_averages(self,params):
         ema = 'ema' + str(params['big_ema'])
         indicators = [self.price_field, ema]
@@ -159,14 +160,33 @@ class Strategy:
                 return False
 
         def sell_signal(price, ticker, order):
+            sell_dict = {'flag':False, 'exit_type': None}
+            below_baseline = price < ema_value
             stop_loss = self.stop_loss(price,order)
             trailing_stop = self.trailing_stop_loss(ticker,params)
-            take_profit = self.take_profit(price,order)
             exit_indicator = (self.cross(ticker,close,ema) == 'down')
-            if stop_loss or trailing_stop or take_profit or exit_indicator:
-                return True
+            if stop_loss or trailing_stop or exit_indicator or below_baseline:
+                if stop_loss:
+                    sell_dict['exit_type']='stop_loss'
+                elif trailing_stop:
+                    sell_dict['exit_type'] = 'trailing_stop'
+                elif exit_indicator:
+                    sell_dict['exit_type'] = 'exit_indicator'
+                elif below_baseline:
+                    sell_dict['exit_type'] = 'baseline'
+                sell_dict['flag'] = True
+                return sell_dict
+            else:
+                return sell_dict
+
+        def scale_out_signal(price, order):
+            if order.state() == 'open':
+                take_profit = self.take_profit(price, order)
+                if take_profit:
+                    return True
             else:
                 return False
+
 
         for ticker in self.tradeable_tickers:
             price = dm.get_value(ticker, close, self.current_date, self.dataset, 1)
@@ -176,8 +196,11 @@ class Strategy:
                     self.add_buy_order(ticker)
             elif self.is_stock_in_portfolio(ticker):
                 order = self.portfolio.get_open_order(ticker)
-                if sell_signal(price,ticker,order):
-                    self.add_sell_order(ticker)
+                sell_dict = sell_signal(price,ticker,order)
+                if sell_dict['flag']:
+                    self.add_sell_order(ticker,sell_dict['exit_type'])
+                elif scale_out_signal(price, order):
+                    self.add_scale_out_order(ticker)
 
 
     def crossing_ols(self,params):

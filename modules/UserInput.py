@@ -12,6 +12,7 @@ class UserInput:
         self.take_profit_parameter = self.strategy_params['take_profit_parameter']
         self.trailing_stop_type = self.strategy_params['trailing_stop_type']
         self.trailing_stop_parameter = self.strategy_params['trailing_stop_parameter']
+        self.scale_out_ratio = self.strategy_params['scale_out_ratio']
 
     def __str__(self):
         # print('\n -- User Input Class -- ')

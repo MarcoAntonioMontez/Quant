@@ -80,14 +80,13 @@ class Trader:
                 position = min(self.portfolio.current_cash, self.portfolio.net_worth/len(self.tickers))
                 new_order = Order(self, order['Stock'], position = position)
                 self.portfolio.add_open_order(new_order)
-                # print('added open_order')
-                # self.portfolio.order_money(order['Type'], order['Stock'], position)
             elif order['Type']=='sell':
-                # total_stock_shares = self.portfolio.holdings.at[self.portfolio.current_day, order['Stock']]
                 open_order = self.portfolio.get_open_order(order['Stock'])
-                open_order.sell_stock()
+                open_order.sell_stock(order['exit_type'])
                 self.portfolio.close_order(order['Stock'])
-                # print('removed open_order')
+            elif order['Type'] == 'scale_out':
+                open_order = self.portfolio.get_open_order(order['Stock'])
+                open_order.scale_out_stock()
         return orders
 
     def next_day(self):

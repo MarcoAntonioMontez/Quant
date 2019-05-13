@@ -12,6 +12,7 @@ class Order:
         self.trader = trader
         self.portfolio = self.trader.portfolio
         self.user_input = self.trader.user_input
+        self.order_type = None
         self.buy_price = None
         self.sell_price = None
         self.scale_out_price = None
@@ -28,6 +29,7 @@ class Order:
         self.trailing_stop = None
         self.exit_type = None
         self.buy_stock(shares, position)
+        self.scale_out_ratio = self.user_input.scale_out_ratio
 
         # missing to implement
         # trailing stop
@@ -46,6 +48,14 @@ class Order:
     def sell_stock(self, exit_type = None):
         self.portfolio.sell_stock(self.stock, 'all')
         self.update_sell_metrics(exit_type)
+
+    def scale_out_stock(self, exit_type = None):
+        sell_shares = self.buy_shares * self.scale_out_ratio
+        self.portfolio.sell_stock(self.stock, sell_shares)
+        self.update_scale_out_metrics()
+
+        # self.portfolio.sell_stock(self.stock, 'all')
+        # self.update_sell_metrics(exit_type)
 
     def update_buy_metrics(self, buy_type, value):
         price = self.portfolio.get_current_price(self.stock)
@@ -67,6 +77,19 @@ class Order:
         self.sell_price = price
         self.sell_date = self.portfolio.get_date()
         self.exit_type = exit_type
+        if self.order_type is not None:
+            pass
+        elif self.sell_price > self.buy_price:
+            self.order_type = 'win'
+        else:
+            self.order_type = 'loss'
+
+    def update_scale_out_metrics(self):
+        self.scale_out_price = self.portfolio.get_current_price(self.stock)
+        self.scale_out_date = self.portfolio.get_date()
+        self.scaled_stop_loss = self.buy_price
+        self.stop_loss = self.scaled_stop_loss
+        self.order_type = 'scaled_win'
 
     def calc_stop_loss(self, price, signal_type, parameter):
         if signal_type.startswith('atr'):
@@ -98,8 +121,15 @@ class Order:
         price = self.portfolio.get_current_price(self.stock)
         self.max_price = max(self.max_price, price)
 
+    def state(self):
+        if self.scale_out_price is None:
+            return 'open'
+        else:
+            return 'scaled_out'
+
     def __str__(self):
         # print('\n -- User Input Class -- ')
+        print('\nOrder Type: ' + str(self.order_type))
         print('\nBuy Price: ' + str(self.buy_price))
         print('\nSell price: ' + str(self.sell_price))
         print('\nScale out price: ' + str(self.scale_out_price))
