@@ -186,23 +186,6 @@ def percentage_change(order_df):
         percentages.append(percentage_change)
     return percentages
 
-def win_rate(order_df):
-    log_pairs = get_log_pairs(order_df)
-    if len(log_pairs) == 0:
-        raise Exception('tuples len is zero!')
-        return
-
-    win_list = []
-    for buy_order,sell_order in log_pairs:
-        if buy_order['price'] < sell_order['price']:
-            win_list.append(1)
-        else:
-            win_list.append(0)
-    win_rate = float(win_list.count(1))/len(win_list)*100
-    win_rate = truncate(win_rate,3)
-    return win_rate,win_list
-
-
 def truncate(number, digits):
     stepper = pow(10.0, digits)
     return math.trunc(stepper * number) / stepper
@@ -212,6 +195,43 @@ def roi(company, dataset):
     start_price = dataset[company, 'Adj Close'].iloc[0]
     end_price = dataset[company, 'Adj Close'].iloc[-1]
     return ((end_price - start_price) / start_price)
+
+
+def roi_order(order):
+    buy_price = order.buy_price
+    scale_out_price = order.scale_out_price
+    sell_price = order.sell_price
+    so_ratio = order.scale_out_ratio
+
+    if scale_out_price is None:
+        roi = (sell_price - buy_price) / buy_price
+    else:
+        end_price = so_ratio * scale_out_price + (1 - so_ratio) * sell_price
+        roi = (end_price - buy_price) / buy_price
+    return roi
+
+
+def roi_order_list(order_list):
+    roi_list = []
+    for order in order_list:
+        roi_list.append(truncate(roi_order(order),4))
+    return roi_list
+
+
+def win_rate(order_list):
+    if len(order_list) == 0:
+        print('Cannot calculate winrate, since list is empty')
+        return None
+
+    win_list = []
+    for order in order_list:
+        if order.order_type == 'loss':
+            win_list.append(0)
+        else:
+            win_list.append(1)
+    ratio = float(win_list.count(1))/len(win_list)*100
+    ratio = truncate(ratio,5)
+    return ratio
 
 
 def mean(lst):

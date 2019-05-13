@@ -284,8 +284,10 @@ class Portfolio:
     def add_order_log(self, order):
         self.orders_log.append(order)
 
-    def get_orders_log(self, ticker):
+    def get_orders_log(self, ticker=None):
         orders = []
+        if ticker is None:
+            return list(self.orders_log)
         for order in self.orders_log:
             if order.stock == ticker:
                 orders.append(order)
