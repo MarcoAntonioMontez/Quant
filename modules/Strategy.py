@@ -206,6 +206,8 @@ class Strategy:
         ema = 'ema' + str(params['big_ema'])
         entry_indicator = params['entry_indicator']
         baseline_indicator = params['baseline_type'] + str(params['baseline_period'])
+        confirmation_indicator = params['confirmation_indicator']
+        confirmation_param = params['confirmation_indicator_parameter']
         indicators = [self.price_field]
         close = self.price_field
         self.check_indicators(indicators)
@@ -213,7 +215,9 @@ class Strategy:
 
         def buy_signal(price, ticker):
             # if ind.indicator_cross(ticker, entry_indicator, params) == 'up' and ind.above_baseline(price, baseline_value):
-            if ind.indicator_cross(self,ticker, entry_indicator, params) == 'up' and price >= ema_value:
+            if ind.indicator_cross(self,ticker, entry_indicator, params) == 'up' and \
+                    price >= ema_value and \
+                    confirmation_value > confirmation_param:
                 return True
             else:
                 return False
@@ -251,6 +255,7 @@ class Strategy:
             ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
             if not self.is_stock_in_portfolio(ticker):
                 baseline_value = dm.get_value(ticker, baseline_indicator, self.current_date, self.dataset, 1)
+                confirmation_value = dm.get_value(ticker, confirmation_indicator, self.current_date, self.dataset,1)
                 if buy_signal(price,ticker):
                     self.add_buy_order(ticker)
             elif self.is_stock_in_portfolio(ticker):
