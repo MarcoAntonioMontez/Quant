@@ -229,10 +229,10 @@ def win_rate(order_list):
     if len(order_list) == 0:
         print('Cannot calculate winrate, since list is empty')
         return None
-
+    roi_list = roi_order_list(order_list)
     win_list = []
-    for order in order_list:
-        if order.order_type == 'loss':
+    for roi in roi_list:
+        if roi <= 0:
             win_list.append(0)
         else:
             win_list.append(1)
@@ -269,7 +269,8 @@ def add_average_ols(dataset, first_header, second_header, divisions=10, length=1
             values.insert(0, df[first_header, second_header].loc[prev_index])
         array = np.asarray(values, dtype=float)
         if not np.isnan(array).any():
-            array = (array - min(array)) / (max(array) - min(array))
+            # array = (array - min(array)) / (max(array) - min(array))
+            array = (array) / ( min(array))
             y_res = array.reshape(-1, 1)
             model = LinearRegression().fit(x_res, y_res)
             ols_list.append(model.coef_[0][0])
