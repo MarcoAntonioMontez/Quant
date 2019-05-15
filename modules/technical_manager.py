@@ -14,7 +14,7 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
     """
-    ratios = ['ema', 'sma','ols','std','atr','aroon','mfi']
+    ratios = ['ema', 'sma','ols','std','atr','aroon','mfi','ssl']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
@@ -39,6 +39,8 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
             df = ra.add_aroon(df, parameter, level)
         elif ratio_name == 'mfi':
             df = ra.add_mfi(df, parameter, level)
+        elif ratio_name == 'ssl':
+            df = ra.add_ssl(df, parameter, level)
 
 
 
@@ -163,6 +165,47 @@ def preprocess_table(df, ratios, price_field = 'Adj Close'):
     df = df.sort_index(axis=1)
     return df
 
+def add_average_ols(dataset, first_header, second_header, divisions=10, length=100):
+    new_ols_field_name = 'ols' + str(length)
+    new_error_field_name = new_ols_field_name + 'error'
+    delays = np.linspace(0, length, num=divisions, dtype=int)
+    x = np.linspace(0, length, divisions) / length
+    x_res = x.reshape(-1, 1)
+
+    subset = dataset[first_header, second_header].copy()
+    df = subset.reset_index()
+    ols_list = []
+    length_dataset = len(df)
+    empty_list = []
+    error_list = []
+
+    for i in range(length, length_dataset):
+        values = []
+        for delay in delays:
+            prev_index = i - delay
+            values.insert(0, df[first_header, second_header].loc[prev_index])
+        array = np.asarray(values, dtype=float)
+        if not np.isnan(array).any():
+            # array = (array - min(array)) / (max(array) - min(array))
+            array = (array) / ( min(array))
+            y_res = array.reshape(-1, 1)
+            model = LinearRegression().fit(x_res, y_res)
+            ols_list.append(model.coef_[0][0])
+            y_predict = model.predict(x_res)
+            error = sklearn.metrics.mean_squared_error(x_res, y_predict)
+            error_list.append(error)
+        else:
+            error_list.append(np.nan)
+            ols_list.append(np.nan)
+    for i in range(0,length):
+        empty_list.append(np.nan)
+    ols_list = list(empty_list + ols_list)
+    error_ols_list = list(empty_list + error_list)
+
+    dataset[first_header, new_ols_field_name] = ols_list
+    dataset[first_header, new_error_field_name] = error_ols_list
+    return dataset
+
 
 def get_log_pairs(df):
     index = 0
@@ -225,11 +268,7 @@ def roi_order_list(order_list):
     return roi_list
 
 
-def win_rate(order_list):
-    if len(order_list) == 0:
-        print('Cannot calculate winrate, since list is empty')
-        return None
-    roi_list = roi_order_list(order_list)
+def win_rate(roi_list):
     win_list = []
     for roi in roi_list:
         if roi <= 0:
@@ -240,6 +279,15 @@ def win_rate(order_list):
     ratio = truncate(ratio,5)
     return ratio
 
+def avg_win_loss(roi_list):
+    wins = [i for i in roi_list if i >= 0]
+    losses = [i for i in roi_list if i < 1]
+
+    avg_win = mean(wins)
+    avg_losses = mean(losses)
+    avg_win = truncate(avg_win,5)
+    avg_losses = truncate(avg_losses,5)
+    return avg_win, avg_losses
 
 def mean(lst):
     return sum(lst) / len(lst)
@@ -248,43 +296,4 @@ def average(lst):
     return sum(lst) / len(lst)
 
 
-def add_average_ols(dataset, first_header, second_header, divisions=10, length=100):
-    new_ols_field_name = 'ols' + str(length)
-    new_error_field_name = new_ols_field_name + 'error'
-    delays = np.linspace(0, length, num=divisions, dtype=int)
-    x = np.linspace(0, length, divisions) / length
-    x_res = x.reshape(-1, 1)
 
-    subset = dataset[first_header, second_header].copy()
-    df = subset.reset_index()
-    ols_list = []
-    length_dataset = len(df)
-    empty_list = []
-    error_list = []
-
-    for i in range(length, length_dataset):
-        values = []
-        for delay in delays:
-            prev_index = i - delay
-            values.insert(0, df[first_header, second_header].loc[prev_index])
-        array = np.asarray(values, dtype=float)
-        if not np.isnan(array).any():
-            # array = (array - min(array)) / (max(array) - min(array))
-            array = (array) / ( min(array))
-            y_res = array.reshape(-1, 1)
-            model = LinearRegression().fit(x_res, y_res)
-            ols_list.append(model.coef_[0][0])
-            y_predict = model.predict(x_res)
-            error = sklearn.metrics.mean_squared_error(x_res, y_predict)
-            error_list.append(error)
-        else:
-            error_list.append(np.nan)
-            ols_list.append(np.nan)
-    for i in range(0,length):
-        empty_list.append(np.nan)
-    ols_list = list(empty_list + ols_list)
-    error_ols_list = list(empty_list + error_list)
-
-    dataset[first_header, new_ols_field_name] = ols_list
-    dataset[first_header, new_error_field_name] = error_ols_list
-    return dataset

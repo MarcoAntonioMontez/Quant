@@ -215,9 +215,9 @@ class Strategy:
 
         def buy_signal(price, ticker):
             # if ind.indicator_cross(ticker, entry_indicator, params) == 'up' and ind.above_baseline(price, baseline_value):
-            if ind.indicator_cross(self,ticker, entry_indicator, params) == 'up' and \
-                    price >= ema_value and \
-                    confirmation_value > confirmation_param:
+            if ind.indicator_cross(self,ticker, entry_indicator, params) == 'up':
+                    # price >= ema_value and \
+                    # confirmation_value > confirmation_param:
                 return True
             else:
                 return False
@@ -228,7 +228,10 @@ class Strategy:
             stop_loss = self.stop_loss(price,order)
             trailing_stop = self.trailing_stop_loss(ticker,params)
             exit_indicator = (self.cross(ticker,close,ema) == 'down')
-            if stop_loss or trailing_stop or exit_indicator or below_baseline:
+            if stop_loss or \
+                    trailing_stop: \
+                    # exit_indicator or \
+                    # below_baseline:
                 if stop_loss:
                     sell_dict['exit_type']='stop_loss'
                 elif trailing_stop:

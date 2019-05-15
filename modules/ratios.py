@@ -56,3 +56,39 @@ def ForceIndex(close,volume,timeperiod):
     return pd.Series(close.diff(timeperiod) * volume)
 
 
+def ssl(high, low, close, timeperiod):
+    avgH = pd.Series(high, index=high.index).rolling(window=timeperiod).mean().values
+    avgL = pd.Series(low, index=low.index).rolling(window=timeperiod).mean().values
+    close = pd.Series(close, index=low.index).values
+
+    hilo = 0
+
+    gann_hilos = []
+
+    for i in range(0, len(avgH)):
+        if close[i] > avgH[i]:
+            hilo = 1
+        elif close[i] < avgL[i]:
+            hilo = 0
+
+        if hilo:
+            gann_hilo = avgL[i]
+        else:
+            gann_hilo = avgH[i]
+
+        gann_hilos.append(gann_hilo)
+
+    return gann_hilos
+
+def add_ssl(dataset,param, first_header):
+    field_name = 'ssl' + str(param)
+    df = dataset[first_header].copy()
+
+    ssl_list = ssl(df['High'], df['Low'], df['Close'], param)
+
+    col = pd.DataFrame(ssl_list, index=df.index)
+
+    dataset[first_header, field_name] = col
+    return dataset
+
+
