@@ -1,9 +1,10 @@
 import json
 import pickle
-from modules.Statistics import Statistics
 import datetime
 import os
 import pandas as pd
+from modules.Statistics import Statistics
+from modules import visualization_manager as vm
 
 
 def create_sim_folder(folder_name):
@@ -34,6 +35,18 @@ def save_trader_logs(trader, folder_name):
     pickle.dump(orders_log, filehandler)
     with open(statistics_filename, 'w') as outfile:
         json.dump(statistics, outfile)
+
+    tickers = dictionary['tickers']
+    num_tickers = len(tickers)
+    if num_tickers > 1:
+        plot_name = 'Net worth portfolio ' + str(num_tickers) + ' companies'
+    elif num_tickers == 1:
+        plot_name = 'Net worth ' + tickers[0]
+    elif num_tickers < 1:
+        raise Exception('Number of companies is 0')
+
+    vm.plot(holdings, fields=['_net worth'], plot_type='scatter', title=plot_name,
+            path=path + '/' + plot_name + '.html', show_plot=False)
 
     return path
 
