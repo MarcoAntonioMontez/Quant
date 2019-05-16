@@ -1,5 +1,6 @@
 class UserInput:
     def __init__(self, inputs):
+        self.inputs = inputs
         self.start_date = inputs['start_date']
         self.end_date = inputs['end_date']
         self.initial_capital = inputs['initial_capital']

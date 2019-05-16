@@ -127,6 +127,8 @@ class Order:
         else:
             return 'scaled_out'
 
+
+
     def __str__(self):
         # print('\n -- User Input Class -- ')
         print('\nOrder Type: ' + str(self.order_type))
