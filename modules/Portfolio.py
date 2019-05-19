@@ -62,23 +62,23 @@ class Portfolio:
         return date
 
     def last_row_date_updated(self, df, date):
-        df = df.iloc[-1:].reset_index().copy()
-        df['Date'] = date
-        df.set_index('Date', inplace=True)
-        return df
+        new_df = df.tail(1).reset_index()
+        new_df['Date'] = date
+        new_df.set_index('Date', inplace=True)
+        return new_df
 
     def get_current_stocks(self):
         tickers = []
         current_stocks = []
         df = self.holdings
-        last_row = df.iloc[-1:].copy()
+        last_row = list(df.columns.values)
 
-        for ticker in list(last_row.columns.values):
+        for ticker in last_row:
             if not ticker.startswith('_'):
                 tickers.append(ticker)
 
         for ticker in tickers:
-            number_shares = last_row.loc[last_row.index[-1]].at[ticker]
+            number_shares = df[ticker].iloc[-1]
             if number_shares > 0:
                 current_stocks.append(ticker)
         return current_stocks
@@ -155,7 +155,7 @@ class Portfolio:
 
     def init_day_holdings(self):
         new_row = self.last_row_date_updated(self.holdings,self.current_day)
-        self.holdings = pd.concat([self.holdings, new_row])
+        self.holdings = self.holdings.append(new_row)
         self.update_day_holdings()
         return self.holdings
 
