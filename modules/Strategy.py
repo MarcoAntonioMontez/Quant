@@ -26,7 +26,7 @@ class Strategy:
     def simulate_day(self, date, new_tickers=[]):
         if new_tickers:
             self.tradeable_tickers = new_tickers
-        self.current_date = pd.to_datetime(date, format="%Y-%m-%d", errors='coerce').date()
+        self.current_date = date
         self.order_list = []
 
         if self.name == 'crossing_averages':
@@ -209,9 +209,9 @@ class Strategy:
         baseline_indicator = params['baseline_type'] + str(params['baseline_period'])
         confirmation_indicator = params['confirmation_indicator']
         confirmation_param = params['confirmation_indicator_parameter']
-        indicators = [self.price_field]
+        # indicators = [self.price_field]
         close = self.price_field
-        self.check_indicators(indicators)
+        # self.check_indicators(indicators)
         order = None
 
         def buy_signal(price, ticker):
@@ -270,7 +270,7 @@ class Strategy:
                 confirmation_value = dm.get_value(ticker, confirmation_indicator, self.current_date, self.dataset,1)
                 if buy_signal(price,ticker):
                     self.add_buy_order(ticker)
-            elif self.is_stock_in_portfolio(ticker):
+            else:
                 order = self.portfolio.get_open_order(ticker)
                 sell_dict = sell_signal(price,ticker,order)
                 if sell_dict['flag']:
