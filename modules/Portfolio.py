@@ -314,6 +314,15 @@ class Portfolio:
         for order in self.open_orders:
             order.update_order()
 
+    def sell_all_stocks(self):
+        for order in self.open_orders:
+            order.sell_stock('simulation_ended')
+            self.close_order(order.stock)
+
+
+
+
+
     def __str__(self):
         print('\nIm a portfolio')
         return

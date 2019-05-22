@@ -83,6 +83,7 @@ class Trader:
             elif order['Type']=='sell':
                 open_order = self.portfolio.get_open_order(order['Stock'])
                 open_order.sell_stock(order['exit_type'])
+                #remove open_order
                 self.portfolio.close_order(order['Stock'])
             elif order['Type'] == 'scale_out':
                 open_order = self.portfolio.get_open_order(order['Stock'])
@@ -99,6 +100,6 @@ class Trader:
         while(self.current_day < self.end_date):
             self.simulate_day()
             self.next_day()
-        self.simulate_day()
+        self.portfolio.sell_all_stocks()
             # print('Current day:' + str(curren))
             # print(self.current_day)
