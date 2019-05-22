@@ -6,6 +6,7 @@ from sklearn.linear_model import LinearRegression
 import sklearn
 import talib
 from modules import ratios as ra
+import statistics
 
 def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     """
@@ -241,11 +242,6 @@ def truncate(number, digits):
     return math.trunc(stepper * number) / stepper
 
 
-def roi(company, dataset):
-    start_price = dataset[company, 'Adj Close'].iloc[0]
-    end_price = dataset[company, 'Adj Close'].iloc[-1]
-    return ((end_price - start_price) / start_price)
-
 
 def roi_order(order):
     buy_price = order.buy_price
@@ -275,7 +271,11 @@ def win_rate(roi_list):
             win_list.append(0)
         else:
             win_list.append(1)
-    ratio = float(win_list.count(1))/len(win_list)*100
+
+    l = len(win_list)
+    if l == 0:
+        return 0
+    ratio = float(win_list.count(1))/l*100
     ratio = truncate(ratio,5)
     return ratio
 
@@ -283,17 +283,19 @@ def avg_win_loss(roi_list):
     wins = [i for i in roi_list if i >= 0]
     losses = [i for i in roi_list if i < 1]
 
-    avg_win = mean(wins)
-    avg_losses = mean(losses)
+    avg_win = 0
+    avg_losses = 0
+
+    if len(wins) != 0:
+        avg_win = statistics.mean(wins)
+
+    if len(losses) != 0:
+        avg_losses = statistics.mean(losses)
+
     avg_win = truncate(avg_win,5)
     avg_losses = truncate(avg_losses,5)
     return avg_win, avg_losses
 
-def mean(lst):
-    return sum(lst) / len(lst)
-
-def average(lst):
-    return sum(lst) / len(lst)
 
 
 
