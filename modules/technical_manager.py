@@ -15,14 +15,14 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
     """
-    ratios = ['ema', 'sma','ols','std','atr','aroon','mfi','ssl']
+    ratios = ['ema', 'sma','dema','kama','tema','trima','wma','ols','std','atr','aroon','mfi','ssl']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
         new_field_name = ratio_name + str(parameter)
 
     if ratio_name not in ratios:
-        raise Exception("\nError Ratio doesn't exist.")
+        raise Exception("\nError! Ratio [{}] doesn't exist.".format(str(ratio_name)))
         return None
 
     for level in first_level_headers:
@@ -30,6 +30,16 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
             df[level, new_field_name] = df[level, price_field].rolling(window=parameter).mean()
         elif ratio_name == 'ema':
             df[level, new_field_name] = df[level, price_field].ewm(span=parameter,adjust=False,min_periods=parameter).mean()
+        elif ratio_name == 'dema':
+            df[level, new_field_name] = talib.DEMA(df[level, price_field],  parameter)
+        elif ratio_name == 'kama':
+            df[level, new_field_name] = talib.KAMA(df[level, price_field], parameter)
+        elif ratio_name == 'tema':
+            df[level, new_field_name] = talib.TEMA(df[level, price_field], parameter)
+        elif ratio_name == 'trima':
+            df[level, new_field_name] = talib.TRIMA(df[level, price_field], parameter)
+        elif ratio_name == 'wma':
+            df[level, new_field_name] = talib.WMA(df[level, price_field], parameter)
         elif ratio_name =='std':
             df = add_std(df, parameter, level, price_field)
         elif ratio_name == 'ols':
@@ -42,8 +52,6 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
             df = ra.add_mfi(df, parameter, level)
         elif ratio_name == 'ssl':
             df = ra.add_ssl(df, parameter, level)
-
-
 
     df = df.sort_index(axis=1)
     return df
@@ -297,5 +305,11 @@ def avg_win_loss(roi_list):
     return avg_win, avg_losses
 
 
-
+def add_ma(ratios,ratios_names,periods):
+    for ratio in ratios_names:
+        for period in periods:
+            d = {}
+            d['ratio_name'] = ratio
+            d['parameter'] = period
+            ratios.append(d)
 

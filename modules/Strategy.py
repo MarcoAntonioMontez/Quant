@@ -203,13 +203,11 @@ class Strategy:
 
 
     def modular_strategy(self,params):
-        ema = 'ema' + str(params['big_ema'])
         entry_indicator = params['entry_indicator']
         exit_indicator_field = params['exit_indicator'] + str(params['exit_indicator_period'])
         baseline_indicator = params['baseline_type'] + str(params['baseline_period'])
         confirmation_indicator = params['confirmation_indicator']
         confirmation_param = params['confirmation_indicator_parameter']
-        # indicators = [self.price_field]
         close = self.price_field
         # self.check_indicators(indicators)
         order = None
@@ -230,10 +228,8 @@ class Strategy:
 
         def sell_signal(price, ticker, order):
             sell_dict = {'flag':False, 'exit_type': None}
-            below_baseline = price < ema_value
             stop_loss = self.stop_loss(price,order)
             trailing_stop = self.trailing_stop_loss(ticker,params)
-            # exit_indicator = (self.cross(ticker,close,exit_indicator_1) == 'down')
             if params['exit_indicator'] != 'None':
                 exit_indicator = (self.cross(ticker, close, exit_indicator_field) == 'down')
             else:
@@ -247,8 +243,6 @@ class Strategy:
                     sell_dict['exit_type'] = 'trailing_stop'
                 elif exit_indicator:
                     sell_dict['exit_type'] = 'exit_indicator'
-                elif below_baseline:
-                    sell_dict['exit_type'] = 'baseline'
                 sell_dict['flag'] = True
                 return sell_dict
             else:
@@ -264,10 +258,9 @@ class Strategy:
 
         for ticker in self.tradeable_tickers:
             price = dm.get_value(ticker, close, self.current_date, self.dataset, 1)
-            ema_value = dm.get_value(ticker, ema, self.current_date, self.dataset, 1)
             # exit_indicator_value = dm.get_value(ticker, exit_indicator_field, self.current_date, self.dataset, 1)
             if not self.is_stock_in_portfolio(ticker):
-                confirmation_value = dm.get_value(ticker, confirmation_indicator, self.current_date, self.dataset,1)
+                # confirmation_value = dm.get_value(ticker, confirmation_indicator, self.current_date, self.dataset,1)
                 if buy_signal(price,ticker):
                     self.add_buy_order(ticker)
             else:
