@@ -155,7 +155,7 @@ def get_value(ticker,field,date,dataset, dataset_type=0):
         # return df.loc[(df['datadate'] == date)].reset_index(
         #     drop=True)
     elif (dataset_type == 1):
-        return dataset[ticker,field].loc[date]
+        return dataset[ticker,field].at[date]
     elif (dataset_type == 2):
         print('\n not implemented for constituents')
         # df = data_company(ticker, dataset, 2)
