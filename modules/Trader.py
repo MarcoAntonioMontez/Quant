@@ -25,8 +25,7 @@ class Trader:
         self.current_day = self.start_date
         self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
-
-
+        self.confirmation_indicators_table = self.create_confirmation_ind_table()
 
     def __str__(self):
         print('\nCurrent Day: ' + str(self.current_day))
@@ -96,6 +95,7 @@ class Trader:
     def get_holdings(self):
         return self.portfolio.get_holdings()
 
+
     def run_simulation(self):
         while(self.current_day < self.end_date):
             self.simulate_day()
@@ -103,3 +103,29 @@ class Trader:
         self.portfolio.sell_all_stocks()
             # print('Current day:' + str(curren))
             # print(self.current_day)
+
+
+    def score_binary(self,ratio, buy_limit):
+        # print(ratio.name[1])
+        if ratio.name[1] == 'rsi14':
+            return (ratio < buy_limit).astype(int)
+        else:
+            return (ratio > buy_limit).astype(int)
+
+
+    def create_confirmation_ind_table(self):
+        inputs = self.user_input.inputs['confirmation_indicators']
+        indicators = inputs['indicators']
+        weights = inputs['weights']
+        buy_limits = inputs['buy_limits']
+        tickers = self.tickers
+        idx = pd.IndexSlice
+        df1 = self.dataset.loc[:, idx[tickers, indicators]].copy()
+
+        for ticker in tickers:
+            df1[ticker, 'total_score'] = 0
+            for i in range(0, len(indicators)):
+                new_field = 'score_' + indicators[i]
+                df1[ticker, new_field] = self.score_binary(df1[ticker, indicators[i]], buy_limits[i])
+                df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
+        return df1.sort_index(axis=1)

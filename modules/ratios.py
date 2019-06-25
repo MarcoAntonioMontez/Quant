@@ -1,5 +1,6 @@
 import pandas as pd
 import talib
+import ta
 
 
 # def add_atr(dataset,param,first_header):
@@ -80,6 +81,7 @@ def ssl(high, low, close, timeperiod):
 
     return gann_hilos
 
+
 def add_ssl(dataset,param, first_header):
     field_name = 'ssl' + str(param)
     df = dataset[first_header].copy()
@@ -87,6 +89,49 @@ def add_ssl(dataset,param, first_header):
     ssl_list = ssl(df['High'], df['Low'], df['Close'], param)
 
     col = pd.DataFrame(ssl_list, index=df.index)
+
+    dataset[first_header, field_name] = col
+    return dataset
+
+
+def add_rsi(dataset,param, first_header):
+    field_name = 'rsi' + str(param)
+    df = dataset[first_header].copy()
+
+    rsi = talib.RSI(df['Close'], timeperiod=param)/100
+
+    col = pd.DataFrame(rsi, index=df.index)
+
+    dataset[first_header, field_name] = col
+    return dataset
+
+
+def add_cmf(dataset,param, first_header):
+    field_name = 'cmf' + str(param)
+    df = dataset[first_header].copy()
+    high = df['High']
+    low = df['Low']
+    close = df['Close']
+    volume = df['Volume']
+
+    cmf = ta.volume.chaikin_money_flow(high, low, close, volume, n=param, fillna=True)
+
+    col = pd.DataFrame(cmf, index=df.index)
+
+    dataset[first_header, field_name] = col
+    return dataset
+
+
+def add_macd_diff(dataset,param, first_header):
+    if len(param)!=3:
+        raise Exception('This ratio requires three parameters, [0]:fast ema, [1]: slow ema, [2]:sign ema')
+    field_name = 'macd_diff' + str(param[0]) + '_' + str(param[1]) + '_' + str(param[2])
+    df = dataset[first_header].copy()
+    close = df['Close']
+
+    macd = ta.trend.macd_diff(close, n_fast=param[0], n_slow=param[1], n_sign=param[2], fillna=True)
+
+    col = pd.DataFrame(macd, index=df.index)
 
     dataset[first_header, field_name] = col
     return dataset

@@ -205,21 +205,23 @@ class Strategy:
     def modular_strategy(self,params):
         entry_indicator = params['entry_indicator']
         exit_indicator_field = params['exit_indicator'] + str(params['exit_indicator_period'])
-        baseline_indicator = params['baseline_type'] + str(params['baseline_period'])
-        confirmation_indicator = params['confirmation_indicator']
-        confirmation_param = params['confirmation_indicator_parameter']
+        dict_confirmation_ind = self.portfolio.user_input.inputs['confirmation_indicators']
+        total_buy_limit = dict_confirmation_ind['total_buy_limit']
+
         close = self.price_field
         # self.check_indicators(indicators)
         order = None
 
         def buy_signal(price, ticker):
-            if params['baseline_type'] != 'None':
-                baseline_value = dm.get_value(ticker, baseline_indicator, self.current_date, self.dataset, 1)
-                baseline_flag = ind.above_baseline(price, baseline_value)
-            else:
-                baseline_flag = True
+            confirmation_value = dm.get_value(ticker, 'total_score', self.current_date,
+                                              self.portfolio.trader.confirmation_indicators_table, 1)
 
-            if ind.indicator_cross(self, ticker, entry_indicator, params) == 'up' and baseline_flag :
+            if confirmation_value >= total_buy_limit:
+                confirmation_flag = True
+            else:
+                confirmation_flag = False
+
+            if ind.indicator_cross(self, ticker, entry_indicator, params) == 'up' and confirmation_flag :
                     # price >= ema_value and \
                     # confirmation_value > confirmation_param:
                 return True
