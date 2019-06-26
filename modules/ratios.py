@@ -27,6 +27,19 @@ def add_aroon(dataset,param, first_header):
     dataset[first_header, field_name_down] = column_down
     return dataset
 
+
+def add_aroon_s(dataset,param, first_header):
+    field_name_up = 'aroon_s' + str(param)
+    df = dataset[first_header].copy()
+    high = df['High'].values
+    low = df['Low'].values
+
+    aroon = talib.AROONOSC(high, low, timeperiod=14)/100
+
+    col = pd.DataFrame(aroon, index=df.index)
+    dataset[first_header, field_name_up] = col
+    return dataset
+
 def add_mfi(dataset,param, first_header):
     field_name_up = 'mfi' + str(param)
     df = dataset[first_header].copy()
@@ -35,7 +48,7 @@ def add_mfi(dataset,param, first_header):
     close = df['Close'].values
     volume = df['Volume'].astype(float).values
 
-    mfi = talib.MFI(high, low, close, volume, timeperiod=param)
+    mfi = talib.MFI(high, low, close, volume, timeperiod=param)/100 - 0.5
 
     col = pd.DataFrame(mfi, index=df.index)
     dataset[first_header, field_name_up] = col

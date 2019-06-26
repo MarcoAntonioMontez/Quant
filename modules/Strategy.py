@@ -205,11 +205,9 @@ class Strategy:
     def modular_strategy(self,params):
         entry_indicator = params['entry_indicator']
         exit_indicator_field = params['exit_indicator'] + str(params['exit_indicator_period'])
-        dict_confirmation_ind = self.portfolio.user_input.inputs['confirmation_indicators']
-        total_buy_limit = dict_confirmation_ind['total_buy_limit']
+        total_buy_limit = params['total_buy_limit']
 
         close = self.price_field
-        # self.check_indicators(indicators)
         order = None
 
         def buy_signal(price, ticker):
@@ -221,7 +219,7 @@ class Strategy:
             else:
                 confirmation_flag = False
 
-            if ind.indicator_cross(self, ticker, entry_indicator, params) == 'up' and confirmation_flag :
+            if ind.indicator_cross(self, ticker, entry_indicator, params) == 'up' and confirmation_flag:
                     # price >= ema_value and \
                     # confirmation_value > confirmation_param:
                 return True
