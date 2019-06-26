@@ -114,10 +114,10 @@ class Trader:
 
 
     def create_confirmation_ind_table(self):
-        inputs = self.user_input.inputs['confirmation_indicators']
-        indicators = inputs['indicators']
-        weights = inputs['weights']
-        buy_limits = inputs['buy_limits']
+        inputs = self.user_input.inputs['strategy_params']
+        indicators = [inputs['volume_ind_1'],inputs['volume_ind_2'],inputs['volume_ind_3']]
+        weights = [inputs['weight_vol_1'],inputs['weight_vol_2'],inputs['weight_vol_3']]
+        buy_limits = [inputs['buy_limit_vol_1'],inputs['buy_limit_vol_2'],inputs['buy_limit_vol_3']]
         tickers = self.tickers
         idx = pd.IndexSlice
         df1 = self.dataset.loc[:, idx[tickers, indicators]].copy()

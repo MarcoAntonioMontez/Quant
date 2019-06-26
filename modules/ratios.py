@@ -136,6 +136,19 @@ def add_macd_diff(dataset,param, first_header):
     dataset[first_header, field_name] = col
     return dataset
 
+
+def add_cmo(dataset,param, first_header):
+    field_name = 'cmo' + str(param)
+    df = dataset[first_header].copy()
+    close = df['Close']
+
+    cmo = talib.CMO(close, timeperiod=14)/100
+
+    col = pd.DataFrame(cmo, index=df.index)
+
+    dataset[first_header, field_name] = col
+    return dataset
+
 # def add_dema()
 
 

@@ -16,7 +16,7 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
     """
-    ratios = ['ema', 'sma','dema','kama','tema','trima','wma','ols','std','atr','aroon','mfi','ssl','macd_s','macd_diff','rsi','cmf']
+    ratios = ['ema', 'sma','dema','kama','tema','trima','wma','ols','std','atr','aroon','mfi','ssl','macd_s','macd_diff','rsi','cmf','cmo']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
@@ -57,6 +57,8 @@ def add_ratio(df, ratio_name, price_field, parameter=1,new_field_name=-1):
             df = ra.add_rsi(df, parameter, level)
         elif ratio_name == 'cmf':
             df = ra.add_cmf(df, parameter, level)
+        elif ratio_name == 'cmo':
+            df = ra.add_cmo(df, parameter, level)
         elif ratio_name == 'macd_diff':
             df = ra.add_macd_diff(df, parameter, level)
         elif ratio_name == 'macd_s':
