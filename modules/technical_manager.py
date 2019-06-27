@@ -185,13 +185,13 @@ def preprocess_table(df, ratios, price_field = 'Adj Close'):
         ratio_name = ratio['ratio_name']
         parameter = ratio['parameter']
         add_ratio(df, ratio_name, price_field, parameter=parameter)
-        if type(parameter) is not list:
-            if parameter > max_parameter:
-                max_parameter = parameter
-
-    if max_parameter > 0:
-        max_index = max_parameter - 1
-    df = df.drop(df.index[0:max_index])
+    #     if type(parameter) is not list:
+    #         if parameter > max_parameter:
+    #             max_parameter = parameter
+    #
+    # if max_parameter > 0:
+    #     max_index = max_parameter - 1
+    # df = df.drop(df.index[0:max_index])
     df = df.sort_index(axis=1)
     return df
 

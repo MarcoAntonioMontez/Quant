@@ -206,6 +206,7 @@ class Strategy:
         entry_indicator = params['entry_indicator']
         exit_indicator_field = params['exit_indicator'] + str(params['exit_indicator_period'])
         total_buy_limit = params['total_buy_limit']
+        total_sell_limit = params['total_sell_limit']
 
         close = self.price_field
         order = None
@@ -230,18 +231,22 @@ class Strategy:
             sell_dict = {'flag':False, 'exit_type': None}
             stop_loss = self.stop_loss(price,order)
             trailing_stop = self.trailing_stop_loss(ticker,params)
-            if params['exit_indicator'] != 'None':
-                exit_indicator = (self.cross(ticker, close, exit_indicator_field) == 'down')
+
+            exit_value = dm.get_value(ticker, 'total_score', self.current_date,
+                                              self.portfolio.trader.exit_indicators_table, 1)
+            if exit_value >= total_sell_limit:
+                exit_flag = True
             else:
-                exit_indicator = False
-            if stop_loss or trailing_stop or exit_indicator:
+                exit_flag = False
+
+            if stop_loss or trailing_stop or exit_flag:
                     # exit_indicator or \
                     # below_baseline:
                 if stop_loss:
                     sell_dict['exit_type']='stop_loss'
                 elif trailing_stop:
                     sell_dict['exit_type'] = 'trailing_stop'
-                elif exit_indicator:
+                elif exit_flag:
                     sell_dict['exit_type'] = 'exit_indicator'
                 sell_dict['flag'] = True
                 return sell_dict

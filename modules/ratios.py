@@ -34,7 +34,7 @@ def add_aroon_s(dataset,param, first_header):
     high = df['High'].values
     low = df['Low'].values
 
-    aroon = talib.AROONOSC(high, low, timeperiod=14)/100
+    aroon = talib.AROONOSC(high, low, timeperiod=14)/(-100)
 
     col = pd.DataFrame(aroon, index=df.index)
     dataset[first_header, field_name_up] = col

@@ -18,7 +18,13 @@ class Trader:
         dates_dict = self.adjusted_dates(dataset, user_input.start_date, user_input.end_date)
         self.start_date = dates_dict['start_date']
         self.end_date = dates_dict['end_date']
+        self.original_dataset = dataset
         self.dataset = self.truncate_dataset(dataset)
+        self.confirmation_indicators_table = self.create_confirmation_ind_table()
+        self.exit_indicators_table = self.create_exit_ind_table()
+        self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
+        self.exit_indicators_table = self.truncate_dataset(self.exit_indicators_table)
+
         self.end_date = self.dataset.index[-1].date()
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
         self.portfolio.set_trader(self)
@@ -26,8 +32,7 @@ class Trader:
         self.current_day = self.start_date
         self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
-        self.confirmation_indicators_table = self.create_confirmation_ind_table()
-        self.exit_indicators_table = self.create_exit_ind_table()
+
 
     def __str__(self):
         print('\nCurrent Day: ' + str(self.current_day))
@@ -121,7 +126,7 @@ class Trader:
         buy_limits = [inputs['buy_limit_vol_1'],inputs['buy_limit_vol_2'],inputs['buy_limit_vol_3']]
         tickers = self.tickers
         idx = pd.IndexSlice
-        df1 = self.dataset.loc[:, idx[tickers, indicators]].copy()
+        df1 = self.original_dataset.loc[:, idx[tickers, indicators]].copy()
 
         for ticker in tickers:
             df1[ticker, 'total_score'] = 0
@@ -140,15 +145,28 @@ class Trader:
         fields = ['Close','Open','High','Low']
         tickers = self.tickers
         idx = pd.IndexSlice
-        df1 = self.dataset.loc[:, idx[tickers, fields]].copy()
+        df1 = self.original_dataset.loc[:, idx[tickers, fields]].copy()
+        sell_limit = 0
 
         for i in range(0, len(indicators)):
             df1 = ta.add_ratio(df1,indicators[i],parameter=params[i])
 
-        # for ticker in tickers:
-        #     df1[ticker, 'total_score'] = 0
-        #     for i in range(0, len(indicators)):
-        #         new_field = 'score_' + indicators[i]
-        #         df1[ticker, new_field] = self.score_binary(df1[ticker, indicators[i]], buy_limits[i])
-        #         df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
+        indicators_name = indicators.copy()
+        for i in range(0, len(indicators)):
+            if type(params[i]) is list:
+                for j in range(0,len(params[i])):
+                    p = params[i][j]
+                    if j == 0:
+                        indicators_name[i] += ('' + str(p))
+                    else:
+                        indicators_name[i] += ('_' + str(p))
+            else:
+                indicators_name[i] += ('' + str(params[i]))
+
+        for ticker in tickers:
+            df1[ticker, 'total_score'] = 0
+            for i in range(0, len(indicators_name)):
+                new_field = 'score_' + indicators_name[i]
+                df1[ticker, new_field] = self.score_binary(df1[ticker, indicators_name[i]], sell_limit)
+                df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
         return df1
