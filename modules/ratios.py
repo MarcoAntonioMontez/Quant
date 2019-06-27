@@ -107,6 +107,19 @@ def add_ssl(dataset,param, first_header):
     return dataset
 
 
+def add_ssl_s(dataset,param, first_header):
+    field_name = 'ssl_s' + str(param)
+    df = dataset[first_header].copy()
+    close = df['Close']
+
+    ssl_list = ssl(df['High'], df['Low'], df['Close'], param)
+
+    col = pd.Series(ssl_list, index=df.index)
+
+    dataset[first_header, field_name] = col - close
+    return dataset
+
+
 def add_rsi(dataset,param, first_header):
     field_name = 'rsi' + str(param)
     df = dataset[first_header].copy()
@@ -160,6 +173,38 @@ def add_cmo(dataset,param, first_header):
     col = pd.DataFrame(cmo, index=df.index)
 
     dataset[first_header, field_name] = col
+    return dataset
+
+
+def add_sar(dataset,param, first_header):
+    if len(param) != 2:
+        raise Exception('This ratio requires two parameters, [0]:acceleration, [1]: maximum ')
+    field_name = 'sar' + str(param[0]) + '_' + str(param[1])
+    df = dataset[first_header].copy()
+    high = df['High']
+    low = df['Low']
+
+    sar = talib.SAR(high, low, acceleration=param[0], maximum=param[1])
+
+    col = pd.DataFrame(sar, index=df.index)
+
+    dataset[first_header, field_name] = col
+    return dataset
+
+
+def add_sar_s(dataset,param, first_header):
+    if len(param) != 2:
+        raise Exception('This ratio requires two parameters, [0]:acceleration, [1]: maximum ')
+    field_name = 'sar_s' + str(param[0]) + '_' + str(param[1])
+    df = dataset[first_header].copy()
+    high = df['High']
+    low = df['Low']
+    close = df['Close']
+
+    sar = talib.SAR(high, low, acceleration=param[0], maximum=param[1])
+    col = pd.Series(sar, index=df.index)
+
+    dataset[first_header, field_name] = col - close
     return dataset
 
 # def add_dema()

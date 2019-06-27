@@ -6,6 +6,7 @@ from modules.Portfolio import Portfolio
 from modules.Strategy import Strategy
 from modules import UserInput
 from modules.Order import Order
+from modules import technical_manager as ta
 
 
 class Trader:
@@ -26,6 +27,7 @@ class Trader:
         self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
         self.confirmation_indicators_table = self.create_confirmation_ind_table()
+        self.exit_indicators_table = self.create_exit_ind_table()
 
     def __str__(self):
         print('\nCurrent Day: ' + str(self.current_day))
@@ -112,7 +114,6 @@ class Trader:
         else:
             return (ratio > buy_limit).astype(int)
 
-
     def create_confirmation_ind_table(self):
         inputs = self.user_input.inputs['strategy_params']
         indicators = [inputs['volume_ind_1'],inputs['volume_ind_2'],inputs['volume_ind_3']]
@@ -129,3 +130,25 @@ class Trader:
                 df1[ticker, new_field] = self.score_binary(df1[ticker, indicators[i]], buy_limits[i])
                 df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
         return df1.sort_index(axis=1)
+
+    def create_exit_ind_table(self):
+        inputs = self.user_input.inputs['strategy_params']
+        indicators = [inputs['exit_ind_1'], inputs['exit_ind_2'], inputs['exit_ind_3']]
+        double_params = [inputs['exit_ind_3_param'],inputs['exit_ind_3_param_2']]
+        params = [int(inputs['exit_ind_1_param']), int(inputs['exit_ind_2_param']), double_params]
+        weights = [inputs['weight_exit_1'], inputs['weight_exit_2'], inputs['weight_exit_3']]
+        fields = ['Close','Open','High','Low']
+        tickers = self.tickers
+        idx = pd.IndexSlice
+        df1 = self.dataset.loc[:, idx[tickers, fields]].copy()
+
+        for i in range(0, len(indicators)):
+            df1 = ta.add_ratio(df1,indicators[i],parameter=params[i])
+
+        # for ticker in tickers:
+        #     df1[ticker, 'total_score'] = 0
+        #     for i in range(0, len(indicators)):
+        #         new_field = 'score_' + indicators[i]
+        #         df1[ticker, new_field] = self.score_binary(df1[ticker, indicators[i]], buy_limits[i])
+        #         df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
+        return df1
