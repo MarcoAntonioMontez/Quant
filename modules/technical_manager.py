@@ -17,7 +17,7 @@ def add_ratio(df, ratio_name, price_field='Close', parameter=1,new_field_name=-1
     :param dataset_type: Integer that tells the dataset inserted. 0 if fundamentals, 1 if stock prices, 2 if constituents.
     :returns: returns a Pandas Dataframe with the data of the csv requested
     """
-    ratios = ['ema', 'sma','dema','kama','tema','trima','wma','ols','std','atr','aroon','mfi','ssl','ssl_s','macd_s','macd_diff','rsi','cmf','cmo','aroon_s','sar','sar_s']
+    ratios = ['ema', 'sma','dema','kama','tema','trima','wma','ols','std','atr','aroon','mfi','ssl','ssl_s','macd_s','macd_diff','rsi','cmf','cmo','aroon_s','sar','sar_s','ema_slope']
     first_level_headers = list(dm.unique_headers(df, 1))
 
     if new_field_name == -1:
@@ -70,6 +70,8 @@ def add_ratio(df, ratio_name, price_field='Close', parameter=1,new_field_name=-1
             df = ra.add_sar(df, parameter, level)
         elif ratio_name == 'sar_s':
             df = ra.add_sar_s(df, parameter, level)
+        elif ratio_name == 'ema_slope':
+            df = ra.add_ema_slope(df, parameter, level)
         elif ratio_name == 'macd_s':
             df[level, new_field_name] = ta.trend.macd(df[level, price_field], n_fast=parameter, n_slow=parameter*2, fillna=False)
 

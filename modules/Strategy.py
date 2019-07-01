@@ -201,28 +201,32 @@ class Strategy:
                 elif scale_out_signal(price, order):
                     self.add_scale_out_order(ticker)
 
-
     def modular_strategy(self,params):
         entry_indicator = params['entry_indicator']
-        exit_indicator_field = params['exit_indicator'] + str(params['exit_indicator_period'])
-        total_buy_limit = params['total_buy_limit']
-        total_sell_limit = params['total_sell_limit']
+        volume_total_buy_limit = params['volume_total_buy_limit']
+        confirmation_total_buy_limit = params['confirmation_total_buy_limit']
 
         close = self.price_field
         order = None
 
         def buy_signal(price, ticker):
-            confirmation_value = dm.get_value(ticker, 'total_score', self.current_date,
-                                              self.portfolio.trader.confirmation_indicators_table, 1)
+            volume_confirmation_value = dm.get_value(ticker, 'total_score', self.current_date,
+                                              self.portfolio.trader.volume_indicators_table, 1)
 
-            if confirmation_value >= total_buy_limit:
+            confirmation_value = dm.get_value(ticker, 'total_score', self.current_date,
+                                      self.portfolio.trader.confirmation_indicators_table, 1)
+            if confirmation_value >= confirmation_total_buy_limit:
                 confirmation_flag = True
             else:
                 confirmation_flag = False
 
-            if ind.indicator_cross(self, ticker, entry_indicator, params) == 'up' and confirmation_flag:
-                    # price >= ema_value and \
-                    # confirmation_value > confirmation_param:
+            if volume_confirmation_value >= volume_total_buy_limit:
+                volume_confirmation_flag = True
+            else:
+                volume_confirmation_flag = False
+
+            if ind.indicator_cross(self, ticker, entry_indicator, params) == 'up' and volume_confirmation_flag and confirmation_flag:
+
                 return True
             else:
                 return False
@@ -232,22 +236,17 @@ class Strategy:
             stop_loss = self.stop_loss(price,order)
             trailing_stop = self.trailing_stop_loss(ticker,params)
 
-            exit_value = dm.get_value(ticker, 'total_score', self.current_date,
-                                              self.portfolio.trader.exit_indicators_table, 1)
-            if exit_value >= total_sell_limit:
-                exit_flag = True
-            else:
-                exit_flag = False
 
-            if stop_loss or trailing_stop or exit_flag:
+
+            if stop_loss or trailing_stop:
                     # exit_indicator or \
                     # below_baseline:
                 if stop_loss:
                     sell_dict['exit_type']='stop_loss'
                 elif trailing_stop:
                     sell_dict['exit_type'] = 'trailing_stop'
-                elif exit_flag:
-                    sell_dict['exit_type'] = 'exit_indicator'
+                # elif exit_flag:
+                #     sell_dict['exit_type'] = 'exit_indicator'
                 sell_dict['flag'] = True
                 return sell_dict
             else:

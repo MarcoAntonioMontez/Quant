@@ -20,10 +20,10 @@ class Trader:
         self.end_date = dates_dict['end_date']
         self.original_dataset = dataset
         self.dataset = self.truncate_dataset(dataset)
+        self.volume_indicators_table = self.create_volume_ind_table()
         self.confirmation_indicators_table = self.create_confirmation_ind_table()
-        self.exit_indicators_table = self.create_exit_ind_table()
+        self.volume_table = self.truncate_dataset(self.volume_indicators_table)
         self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
-        self.exit_indicators_table = self.truncate_dataset(self.exit_indicators_table)
 
         self.end_date = self.dataset.index[-1].date()
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
@@ -119,7 +119,7 @@ class Trader:
         else:
             return (ratio > buy_limit).astype(int)
 
-    def create_confirmation_ind_table(self):
+    def create_volume_ind_table(self):
         inputs = self.user_input.inputs['strategy_params']
         indicators = [inputs['volume_ind_1'],inputs['volume_ind_2'],inputs['volume_ind_3']]
         weights = [inputs['weight_vol_1'],inputs['weight_vol_2'],inputs['weight_vol_3']]
@@ -136,7 +136,7 @@ class Trader:
                 df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
         return df1.sort_index(axis=1)
 
-    def create_exit_ind_table(self):
+    def create_confirmation_ind_table(self):
         inputs = self.user_input.inputs['strategy_params']
         indicators = [inputs['exit_ind_1'], inputs['exit_ind_2'], inputs['exit_ind_3']]
         double_params = [inputs['exit_ind_3_param'],inputs['exit_ind_3_param_2']]
