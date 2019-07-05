@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import sys,os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-plotly.offline.init_notebook_mode()
 from modules import logs_manager as logs
 from modules import data_manager as dm
 from modules import technical_manager as tm
