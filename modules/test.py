@@ -13,16 +13,16 @@ from modules import ga
 pd.options.display.max_rows = 200
 
 
-def isnotebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        from plotly.offline import iplot
-        import plotly.graph_objs as go
-        import plotly
-        plotly.offline.init_notebook_mode()
-        plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
-    except NameError:
-        return False
+# def isnotebook():
+#     try:
+#         shell = get_ipython().__class__.__name__
+#         from plotly.offline import iplot
+#         import plotly.graph_objs as go
+#         import plotly
+#         plotly.offline.init_notebook_mode()
+#         plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
+#     except NameError:
+#         return False
 
 data_path = '../data/'
 prices = '21_sample_2005_2016.csv'
@@ -101,7 +101,7 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'volume_total_buy_limit':0.259,
                                  'exit_ind_1':'aroon_s',
                                  'exit_ind_2':'ssl_s', #ssl_line
-                                 'exit_ind_3':'ema', #sar_line
+                                 'exit_ind_3':'ema_slope', #sar_line
                                  'exit_ind_1_param': 14.0,
                                  'exit_ind_2_param': 20.0,
                                  'exit_ind_3_param': 30.0,
@@ -136,12 +136,12 @@ f_max = 10
 i_min = 0
 i_max = len(encoding_period) - 1
 f_range = (f_min, f_max)
-period_range = (i_min, i_max)
+# period_range = (i_min, i_max)
 unit_range = (0, 1)
 double_range = (-0.5, 1.5)
 volume_limit_range = (-0.5, 0.5)
 total_buy_limit_range = (0, 1)
-period_range = [10, 50]
+period_range = (10, 50)
 
 weight_names = ['weight_vol_1', 'weight_vol_2', 'weight_vol_3']
 exit_names = ['weight_exit_1', 'weight_exit_2', 'weight_exit_3']
@@ -191,7 +191,7 @@ for j in range(0, 1):
     pop = ga.init_pop(master_genes, pop_size)
     pop = ga.normalize_weights(pop, weight_names, master_genes)
     pop = ga.normalize_weights(pop, exit_names, master_genes)
-    print(pop[0,:])
+    # print(pop[0,:])
 
     print("Init: ")
     fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
