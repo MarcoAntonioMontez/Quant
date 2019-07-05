@@ -1,17 +1,15 @@
 import pandas as pd
 import numpy as np
 
-def isnotebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        from plotly.offline import iplot
-        import plotly.graph_objs as go
-        import plotly
-        import plotly.plotly as py
-        plotly.offline.init_notebook_mode()
-        plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
-    except NameError:
-        return False
+from plotly.offline import iplot
+import plotly.graph_objs as go
+import plotly
+plotly.offline.init_notebook_mode()
+plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
+import os
+import time
+from shutil import copyfile
+
 
 
 def color_bar():

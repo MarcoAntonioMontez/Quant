@@ -3,10 +3,8 @@ import pandas as pd
 import numpy as np
 import sys,os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-from modules import logs_manager as logs
 from modules import data_manager as dm
 from modules import technical_manager as tm
-from modules import visualization_manager as vm
 from modules.UserInput import UserInput
 from modules.Trader import Trader
 from modules.Order import Order
