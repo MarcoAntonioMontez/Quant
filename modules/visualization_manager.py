@@ -1,16 +1,24 @@
 import pandas as pd
 import numpy as np
 
-from plotly.offline import iplot
-import plotly.graph_objs as go
-import plotly
-plotly.offline.init_notebook_mode()
-plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
+# from plotly.offline import iplot
+# import plotly.graph_objs as go
+# import plotly
+# plotly.offline.init_notebook_mode()
+# plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
 import os
 import time
 from shutil import copyfile
 
-
+try:
+    shell = get_ipython()
+    from plotly.offline import iplot
+    import plotly.graph_objs as go
+    import plotly
+    plotly.offline.init_notebook_mode()
+    plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
+except NameError:
+    a = True
 
 def color_bar():
     # import seaborn as sns

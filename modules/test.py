@@ -10,19 +10,8 @@ from modules.Trader import Trader
 from modules.Order import Order
 from modules.Statistics import Statistics
 from modules import ga
+from modules import logs_manager as logs
 pd.options.display.max_rows = 200
-
-
-# def isnotebook():
-#     try:
-#         shell = get_ipython().__class__.__name__
-#         from plotly.offline import iplot
-#         import plotly.graph_objs as go
-#         import plotly
-#         plotly.offline.init_notebook_mode()
-#         plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
-#     except NameError:
-#         return False
 
 data_path = '../data/'
 prices = '21_sample_2005_2016.csv'
@@ -168,7 +157,7 @@ master_genes.append(ga.master_gene("trailing_stop_parameter", 0, 'float', f_rang
 master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', f_range))
 
 ###GA parameters
-pop_size = 20
+pop_size = 200
 tournament_size = 2
 tournament_co_winners = 1
 tour_parents = pop_size / 2
@@ -176,29 +165,22 @@ prob_mutation = 0.05
 sigma = 1
 min_step = 0.05
 offspring_size = int(pop_size * 0.9)
-number_parents_crossover = 2
+number_parents_crossover = 4
 crossover_rate = 0.9
 elites_size = int(pop_size * 0.1)
-ga_runs = 2
+ga_runs = 1
 if pop_size != (offspring_size + elites_size):
     raise Exception("Size of offspring plus size of elites must equal population size")
 
-
-
 ga_simulation_1 = []
-for j in range(0, 1):
+for j in range(0, 2):
     ga_results = []
     print("Simulation: " + str(j + 1))
 
     pop = ga.init_pop(master_genes, pop_size)
-    # print(pop[0,:])
-    # print(ga.decoder(pop[0,:],master_genes))
     pop = ga.normalize_weights(pop, weight_names, master_genes)
-    # print(ga.decoder(pop[0, :], master_genes))
     pop = ga.normalize_weights(pop, exit_names, master_genes)
-    # print(ga.decoder(pop[0, :], master_genes))
-
-    exit()
+    # display(pop[0,:])
 
     print("Init: ")
     fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
@@ -208,15 +190,12 @@ for j in range(0, 1):
     for i in range(0, ga_runs):
         print("Iteration: " + str(i + 1))
         elites = ga.elite_individuals(pop, fitness_array, elites_size)
-        best_4_elites = ga.elite_individuals(pop, fitness_array, 4)
-        print(best_4_elites)
+        best_elite = ga.elite_individuals(pop, fitness_array, 1)
+        print(best_elite)
         selected_parents = ga.tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
-        print('mutating')
         mutated = ga.mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
-        print('crossing')
         crossed = ga.crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
         pop = np.concatenate((elites, crossed))
-        print('normalizing weights')
         pop = ga.normalize_weights(pop, weight_names, master_genes)
         pop = ga.normalize_weights(pop, exit_names, master_genes)
         fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
@@ -224,5 +203,7 @@ for j in range(0, 1):
 
         ga_results.append((most_fit, average_fit))
     ga_simulation_1.append(ga_results)
-    best_4_elites = ga.elite_individuals(pop, fitness_array, 4)
-    print(best_4_elites)
+    best_elite = ga.elite_individuals(pop, fitness_array, 1)
+    print(best_elite)
+    logs.save_trader_logs(master_genes, trader, best_elite, most_fit, 'sim' + str(j))
+

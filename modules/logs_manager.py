@@ -6,6 +6,11 @@ import pandas as pd
 from modules.Statistics import Statistics
 from modules import visualization_manager as vm
 
+import json
+import pickle
+import datetime
+from collections import OrderedDict
+
 
 def create_sim_folder(folder_name):
     path = '../data/sim_logs/'
@@ -16,40 +21,24 @@ def create_sim_folder(folder_name):
     return folder_path
 
 
-def save_trader_logs(trader, folder_name):
+def save_trader_logs(master_genes,trader,best_chromossome,fitness, folder_name):
     path = create_sim_folder(folder_name)
+
     dictionary = trader.user_input.inputs
-    holdings = trader.get_holdings()
-    orders_log = trader.portfolio.get_orders_log()
-    statistics = Statistics(orders_log, holdings).get_dict()
+    # holdings = trader.get_holdings()
 
-    trader_dictionary_filename = path + '/trader_dictionary.json'
-    holdings_filename = path + '/holdings.csv'
-    orders_log_filename = path + '/orders_log.obj'
-    statistics_filename = path + '/statistics.json'
+    log_dict = OrderedDict()
+    log_dict['roi'] = fitness
+    log_dict['best_chromossome'] = best_chromossome.tolist()
+    log_dict['trader_dict'] = dictionary
+    log_dict['master_genes'] = master_genes
 
-    with open(trader_dictionary_filename, 'w') as outfile:
-        json.dump(dictionary, outfile)
-    holdings.to_csv(holdings_filename)
-    filehandler = open(orders_log_filename, 'wb')
-    pickle.dump(orders_log, filehandler)
-    with open(statistics_filename, 'w') as outfile:
-        json.dump(statistics, outfile)
 
-    tickers = dictionary['tickers']
-    num_tickers = len(tickers)
-    if num_tickers > 1:
-        plot_name = 'Net worth portfolio ' + str(num_tickers) + ' companies'
-    elif num_tickers == 1:
-        plot_name = 'Net worth ' + tickers[0]
-    elif num_tickers < 1:
-        raise Exception('Number of companies is 0')
+    results = path + '/results.json'
 
-    vm.plot(holdings, fields=['_net worth'], plot_type='scatter', title=plot_name,
-            path=path + '/' + plot_name + '.html', show_plot=False)
-
+    with open(results, 'w') as outfile:
+        json.dump(log_dict, outfile)
     return path
-
 
 def get_trader_logs(foldername=None, dirpath=None, fullpath=None):
     if foldername is None and fullpath is None:
@@ -62,25 +51,15 @@ def get_trader_logs(foldername=None, dirpath=None, fullpath=None):
     else:
         path = dirpath + foldername
 
-    trader_dictionary_filename = path + '/trader_dictionary.json'
-    holdings_filename = path + '/holdings.csv'
-    orders_log_filename = path + '/orders_log.obj'
-    statistics_filename = path + '/statistics.json'
+    results = path + '/results.json'
 
-    with open(trader_dictionary_filename) as infile:
-        trader_dictionary = json.load(infile)
+    with open(results) as infile:
+        results = json.load(infile)
 
-    holdings = pd.read_csv(holdings_filename, index_col=0)
 
-    filehandler = open(orders_log_filename, 'rb')
-    orders_log = pickle.load(filehandler)
-
-    with open(statistics_filename) as infile:
-        statistics = json.load(infile)
-
-    d = dict()
-    d['trader_dictionary'] = trader_dictionary
-    d['statistics'] = statistics
-    d['orders_log'] = orders_log
-    d['holdings'] = holdings
+    d = OrderedDict()
+    d['roi']=results['roi']
+    d['best_chromossome'] = results['best_chromossome']
+    d['trader_dictionary'] = results['trader_dict']
+    d['master_genes'] = results['master_genes']
     return d
