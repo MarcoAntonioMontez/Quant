@@ -101,7 +101,7 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'volume_total_buy_limit':0.259,
                                  'exit_ind_1':'aroon_s',
                                  'exit_ind_2':'ssl_s', #ssl_line
-                                 'exit_ind_3':'ema_slope', #sar_line
+                                 'exit_ind_3':'ema', #sar_line
                                  'exit_ind_1_param': 14.0,
                                  'exit_ind_2_param': 20.0,
                                  'exit_ind_3_param': 30.0,
