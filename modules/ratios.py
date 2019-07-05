@@ -211,16 +211,15 @@ def add_sar_s(dataset,param, first_header):
 
 
 def add_ema_slope(dataset,param, first_header):
-    if len(param) != 2:
-        raise Exception('This ratio requires two parameters, [0]:period, [1]: mean parameter ')
-    ema_name = 'ema' + str(param[0])
-    field_name =  ema_name + '_slope_mean' + str(param[1])
+    mean_periods = 5
+    ema_name = 'ema' + str(param)
+    field_name = 'ema_slope' + str(param)
     if ema_name in dataset[first_header].columns.values.tolist():
         ema_col = dataset[first_header, ema_name]
     else:
-        ema_col = dataset[first_header, 'Close'].ewm(span=param[0], adjust=False, min_periods=param[0]).mean()
+        ema_col = dataset[first_header, 'Close'].ewm(span=param, adjust=False, min_periods=param).mean()
 
-    ema_slope_col = ema_col.diff().rolling(window=param[1]).mean()
+    ema_slope_col = ema_col.diff().rolling(window=mean_periods).mean()
 
     dataset[first_header, field_name] = ema_slope_col
     return dataset

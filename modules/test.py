@@ -101,11 +101,10 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'volume_total_buy_limit':0.259,
                                  'exit_ind_1':'aroon_s',
                                  'exit_ind_2':'ssl_s', #ssl_line
-                                 'exit_ind_3':'sar_s', #sar_line
+                                 'exit_ind_3':'ema_slope', #sar_line
                                  'exit_ind_1_param': 14.0,
                                  'exit_ind_2_param': 20.0,
-                                 'exit_ind_3_param': 0.01,
-                                 'exit_ind_3_param_2': 0.4,
+                                 'exit_ind_3_param': 30,
                                  'weight_exit_1':0.33,
                                  'weight_exit_2':0.33,
                                  'weight_exit_3':0.33,
@@ -113,8 +112,9 @@ dictionary['strategy_params'] = {'big_ema':200,
                                   }
 user_input = UserInput(dictionary)
 trader = Trader(dataset,user_input)
-
 truncated_dataset = trader.dataset
+
+
 
 values = [14, 20, 25, 30, 50]
 encoding_period = dict(zip(range(0, len(values)), values))
@@ -132,8 +132,8 @@ encoding_baseline_period = dict(zip(range(0, len(values)), values))
 baseline_period_range = (0, len(values) - 1)
 
 f_min = 0.5
-f_max = 15
-i_min = 0.01
+f_max = 10
+i_min = 0
 i_max = len(encoding_period) - 1
 f_range = (f_min, f_max)
 period_range = (i_min, i_max)
@@ -152,8 +152,7 @@ master_genes.append(ga.master_gene("weight_exit_2", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_exit_3", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("exit_ind_1_param", 0, 'float', period_range))
 master_genes.append(ga.master_gene("exit_ind_2_param", 0, 'float', period_range))
-master_genes.append(ga.master_gene("exit_ind_3_param", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("exit_ind_3_param_2", 0, 'float', unit_range))
+master_genes.append(ga.master_gene("exit_ind_3_param", 0, 'float', period_range))
 master_genes.append(ga.master_gene("confirmation_total_buy_limit", 0, 'float', double_range))
 
 master_genes.append(ga.master_gene("weight_vol_1", 0, 'float', unit_range))
@@ -202,15 +201,12 @@ for j in range(0, 1):
     for i in range(0, ga_runs):
         print("Iteration: " + str(i + 1))
         elites = ga.elite_individuals(pop, fitness_array, elites_size)
-        best_2_elites = ga.elite_individuals(pop, fitness_array, 2)
-        print(best_2_elites)
+        best_4_elites = ga.elite_individuals(pop, fitness_array, 4)
+        print(best_4_elites)
         selected_parents = ga.tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
-        print('mutating')
         mutated = ga.mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
-        print('crossing')
         crossed = ga.crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
         pop = np.concatenate((elites, crossed))
-        print('normalizing')
         pop = ga.normalize_weights(pop, weight_names, master_genes)
         pop = ga.normalize_weights(pop, exit_names, master_genes)
         fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
@@ -218,8 +214,5 @@ for j in range(0, 1):
 
         ga_results.append((most_fit, average_fit))
     ga_simulation_1.append(ga_results)
-    best_2_elites = ga.elite_individuals(pop, fitness_array, 4)
-    print(best_2_elites)
-
-
-print('\nModified GA\n')
+    best_4_elites = ga.elite_individuals(pop, fitness_array, 4)
+    print(best_4_elites)

@@ -139,8 +139,8 @@ class Trader:
     def create_confirmation_ind_table(self):
         inputs = self.user_input.inputs['strategy_params']
         indicators = [inputs['exit_ind_1'], inputs['exit_ind_2'], inputs['exit_ind_3']]
-        double_params = [inputs['exit_ind_3_param'],inputs['exit_ind_3_param_2']]
-        params = [int(inputs['exit_ind_1_param']), int(inputs['exit_ind_2_param']), double_params]
+        # double_params = [inputs['exit_ind_3_param'],inputs['exit_ind_3_param_2']]
+        params = [int(inputs['exit_ind_1_param']), int(inputs['exit_ind_2_param']), int(inputs['exit_ind_3_param'])]
         weights = [inputs['weight_exit_1'], inputs['weight_exit_2'], inputs['weight_exit_3']]
         fields = ['Close','Open','High','Low']
         tickers = self.tickers
