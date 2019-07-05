@@ -183,12 +183,15 @@ ga_runs = 2
 if pop_size != (offspring_size + elites_size):
     raise Exception("Size of offspring plus size of elites must equal population size")
 
+
+
 ga_simulation_1 = []
 for j in range(0, 1):
     ga_results = []
     print("Simulation: " + str(j + 1))
 
     pop = ga.init_pop(master_genes, pop_size)
+    print(pop[0,:])
     print(ga.decoder(pop[0,:],master_genes))
     pop = ga.normalize_weights(pop, weight_names, master_genes)
     print(ga.decoder(pop[0, :], master_genes))
