@@ -217,7 +217,7 @@ def add_ema_slope(dataset,param, first_header):
     if ema_name in dataset[first_header].columns.values.tolist():
         ema_col = dataset[first_header, ema_name]
     else:
-        print('Param is: ' + str(param))
+        # print('Param is: ' + str(param))
         ema_col = dataset[first_header, 'Close'].ewm(span=int(param), adjust=False, min_periods=int(param)).mean()
 
     ema_slope_col = ema_col.diff().rolling(window=mean_periods).mean()
