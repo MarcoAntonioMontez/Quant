@@ -1,30 +1,18 @@
 import pandas as pd
 import numpy as np
-import plotly.plotly as py
-import plotly.graph_objs as go
 
 def isnotebook():
     try:
         shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
-            return True   # Jupyter notebook or qtconsole
-        elif shell == 'TerminalInteractiveShell':
-            return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+        import plotly
+        import plotly.plotly as py
+        plotly.offline.init_notebook_mode()
+        plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
     except NameError:
         return False
 
-
-from plotly.offline import iplot
-import plotly.graph_objs as go
-import plotly
-plotly.offline.init_notebook_mode()
-import os
-import time
-from shutil import copyfile
-
-plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
 
 def color_bar():
     # import seaborn as sns
