@@ -52,7 +52,7 @@ def decoder(arr_row, master_list):
         print(mgene)
         decoded_params[mgene['name']] = arr_row[i]
         print(decoded_params[mgene['name']])
-        return decoded_params
+    return decoded_params
 
 print(arr_row)
 print(decoder(arr_row,master_genes))
