@@ -50,11 +50,8 @@ def decoder(arr_row, master_list):
     for i in range(0, l):
         mgene = master_list[i]
         print(mgene)
-        if mgene['type'] == 'int':
-            key = mgene["encoding"][int(arr_row[i])]
-            decoded_params[mgene['name']] = key
-        else:
-            decoded_params[mgene['name']] = arr_row[i]
+        decoded_params[mgene['name']] = arr_row[i]
+        print(decoded_params[mgene['name']])
     return decoded_params
 
 print(arr_row)
