@@ -1,5 +1,6 @@
 import sys,os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from collections import OrderedDict
 
 import random
 from modules import ga
@@ -46,7 +47,7 @@ def decoder(arr_row, master_list):
     l = len(arr_row)
     if l != len(master_list):
         raise Exception("Error! Array length must be the same as gene_list length!")
-    decoded_params = {}
+    decoded_params = OrderedDict()
     for i in range(0, l):
         mgene = master_list[i]
         print(mgene)
