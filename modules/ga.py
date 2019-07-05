@@ -6,6 +6,7 @@ from modules.UserInput import UserInput
 from modules.Order import Order
 from modules.Trader import Trader
 import random
+from collections import OrderedDict
 
 
 def master_gene(name, id, type, range):
@@ -51,7 +52,7 @@ def decoder(arr_row, master_list):
     l = len(arr_row)
     if l != len(master_list):
         raise Exception("Error! Array length must be the same as gene_list length!")
-    decoded_params = {}
+    decoded_params = OrderedDict()
     for i in range(0, l):
         mgene = master_list[i]
         if mgene['type'] == 'int':
