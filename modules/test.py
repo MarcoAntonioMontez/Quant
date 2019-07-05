@@ -56,7 +56,7 @@ if update_fields:
 else:
     dataset = dm.load_csv(data_path + processed_prices,1)
 
-print(dataset.head())
+# print(dataset.head())
 
 bad_companies = ['AKS','ETFC','LM', 'RF','OI','CLF','DO']
 ok_companies = ['TEX','BBT','MOS','CSCO','BC','FLR','FDX']
@@ -133,7 +133,7 @@ baseline_period_range = (0, len(values) - 1)
 
 f_min = 0.5
 f_max = 15
-i_min = 0
+i_min = 0.01
 i_max = len(encoding_period) - 1
 f_range = (f_min, f_max)
 period_range = (i_min, i_max)
@@ -177,7 +177,7 @@ prob_mutation = 0.05
 sigma = 1
 min_step = 0.05
 offspring_size = int(pop_size * 0.9)
-number_parents_crossover = 4
+number_parents_crossover = 2
 crossover_rate = 0.9
 elites_size = int(pop_size * 0.1)
 ga_runs = 2
@@ -205,9 +205,12 @@ for j in range(0, 1):
         best_2_elites = ga.elite_individuals(pop, fitness_array, 2)
         print(best_2_elites)
         selected_parents = ga.tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
+        print('mutating')
         mutated = ga.mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
+        print('crossing')
         crossed = ga.crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
         pop = np.concatenate((elites, crossed))
+        print('normalizing')
         pop = ga.normalize_weights(pop, weight_names, master_genes)
         pop = ga.normalize_weights(pop, exit_names, master_genes)
         fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
