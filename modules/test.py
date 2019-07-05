@@ -104,7 +104,7 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'exit_ind_3':'ema_slope', #sar_line
                                  'exit_ind_1_param': 14.0,
                                  'exit_ind_2_param': 20.0,
-                                 'exit_ind_3_param': 30,
+                                 'exit_ind_3_param': 30.0,
                                  'weight_exit_1':0.33,
                                  'weight_exit_2':0.33,
                                  'weight_exit_3':0.33,
