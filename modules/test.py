@@ -12,6 +12,18 @@ from modules.Statistics import Statistics
 from modules import ga
 pd.options.display.max_rows = 200
 
+
+def isnotebook():
+    try:
+        shell = get_ipython().__class__.__name__
+        from plotly.offline import iplot
+        import plotly.graph_objs as go
+        import plotly
+        plotly.offline.init_notebook_mode()
+        plotly.tools.set_credentials_file(username='marco.montez', api_key='FgZQOnOU1P78yrlx0Vwx')
+    except NameError:
+        return False
+
 data_path = '../data/'
 prices = '21_sample_2005_2016.csv'
 processed_prices = 'pre_processed_21_sample.csv'
