@@ -228,7 +228,7 @@ def fitness_stats(fitness_array):
     average_fit = np.average(fitness_array)
     print("Most fitt individual: " + str(np.round(most_fit, decimals=3)))
     print("Average fitness: " + str(np.round(average_fit, decimals=3)))
-    return
+    return most_fit, average_fit
 
 
 def normalize_array(x):
