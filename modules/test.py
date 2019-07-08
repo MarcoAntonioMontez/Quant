@@ -157,7 +157,7 @@ master_genes.append(ga.master_gene("trailing_stop_parameter", 0, 'float', f_rang
 master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', f_range))
 
 ###GA parameters
-pop_size = 200
+pop_size = 120
 tournament_size = 2
 tournament_co_winners = 1
 tour_parents = pop_size / 2
@@ -168,12 +168,12 @@ offspring_size = int(pop_size * 0.9)
 number_parents_crossover = 4
 crossover_rate = 0.9
 elites_size = int(pop_size * 0.1)
-ga_runs = 1
+ga_runs = 20
 if pop_size != (offspring_size + elites_size):
     raise Exception("Size of offspring plus size of elites must equal population size")
 
 ga_simulation_1 = []
-for j in range(0, 2):
+for j in range(0, 5):
     ga_results = []
     print("Simulation: " + str(j + 1))
 
