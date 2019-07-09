@@ -17,6 +17,7 @@ def create_sim_folder(folder_name):
     today = datetime.datetime.now()
     date = today.strftime(" %Y-%m-%d %H-%M-%S")
     folder_path = path + folder_name + str(date)
+    # os.makedirs(folder_path)
     os.mkdir(folder_path)
     return folder_path
 
@@ -32,7 +33,6 @@ def save_trader_logs(master_genes,trader,best_chromossome,fitness, folder_name):
     log_dict['best_chromossome'] = best_chromossome.tolist()
     log_dict['trader_dict'] = dictionary
     log_dict['master_genes'] = master_genes
-
 
     results = path + '/results.json'
 
