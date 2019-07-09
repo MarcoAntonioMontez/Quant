@@ -17,8 +17,8 @@ def create_sim_folder(folder_name):
     today = datetime.datetime.now()
     date = today.strftime(" %Y-%m-%d %H-%M-%S")
     folder_path = path + folder_name + str(date)
-    # os.makedirs(folder_path)
-    os.mkdir(folder_path)
+    os.makedirs(folder_path)
+    #os.mkdir(folder_path)
     return folder_path
 
 

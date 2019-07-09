@@ -60,7 +60,7 @@ tickers = ['LH']
 
 dictionary = {}
 dictionary['start_date'] = '2010-1-1'
-dictionary['end_date'] = '2011-12-31'
+dictionary['end_date'] = '2010-12-31'
 dictionary['initial_capital'] = 10000
 dictionary['tickers'] = tickers
 dictionary['strategy'] = 'modular_strategy'
@@ -157,7 +157,7 @@ master_genes.append(ga.master_gene("trailing_stop_parameter", 0, 'float', f_rang
 master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', f_range))
 
 ###GA parameters
-pop_size = 120
+pop_size = 20
 tournament_size = 2
 tournament_co_winners = 1
 tour_parents = pop_size / 2
@@ -165,15 +165,15 @@ prob_mutation = 0.05
 sigma = 1
 min_step = 0.05
 offspring_size = int(pop_size * 0.9)
-number_parents_crossover = 4
+number_parents_crossover = 2
 crossover_rate = 0.9
 elites_size = int(pop_size * 0.1)
-ga_runs = 20
+ga_runs = 1
 if pop_size != (offspring_size + elites_size):
     raise Exception("Size of offspring plus size of elites must equal population size")
 
 ga_simulation_1 = []
-for j in range(0, 5):
+for j in range(0, 2):
     ga_results = []
     print("Simulation: " + str(j + 1))
 
@@ -204,6 +204,10 @@ for j in range(0, 5):
         ga_results.append((most_fit, average_fit))
     ga_simulation_1.append(ga_results)
     best_elite = ga.elite_individuals(pop, fitness_array, 1)
-    print(best_elite)
+    print('\n'+ str(best_elite))
     logs.save_trader_logs(master_genes, trader, best_elite, most_fit, 'sim' + str(j))
+
+ga_results = np.array(ga_simulation_1)
+print('\n Ga_results[most_fit, avg_fit]\n')
+print(ga_results[:,-1])
 
