@@ -74,7 +74,7 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'trailing_stop_parameter':4.289,
                                  'close_name':price_field,
                                  'scale_out_ratio': 0.5,
-                                 'entry_indicator':'aroon',
+                                 'entry_indicator':'aroon_s',
                                  'entry_indicator_period':14,
                                  'exit_indicator':'None', #ssl
                                  'exit_indicator_period':20,
@@ -84,9 +84,9 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'weight_vol_1':0.358,
                                  'weight_vol_2':0.246,
                                  'weight_vol_3':0.395,
-                                 'buy_limit_vol_1': 0.177,
-                                 'buy_limit_vol_2':0.282,
-                                 'buy_limit_vol_3':-0.038,
+                                 'buy_limit_vol_1': 0,
+                                 'buy_limit_vol_2':0,
+                                 'buy_limit_vol_3':0,
                                  'volume_total_buy_limit':0.259,
                                  'exit_ind_1':'aroon_s',
                                  'exit_ind_2':'ssl_s', #ssl_line
@@ -138,6 +138,8 @@ weight_names = ['weight_vol_1', 'weight_vol_2', 'weight_vol_3']
 exit_names = ['weight_exit_1', 'weight_exit_2', 'weight_exit_3']
 
 master_genes = []
+master_genes.append(ga.master_gene("entry_indicator_period",0, 'float',period_range))
+
 master_genes.append(ga.master_gene("weight_exit_1", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_exit_2", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_exit_3", 0, 'float', unit_range))
@@ -149,9 +151,9 @@ master_genes.append(ga.master_gene("confirmation_total_buy_limit", 0, 'float', d
 master_genes.append(ga.master_gene("weight_vol_1", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_vol_2", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_vol_3", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("buy_limit_vol_1", 0, 'float', volume_limit_range))
-master_genes.append(ga.master_gene("buy_limit_vol_2", 0, 'float', volume_limit_range))
-master_genes.append(ga.master_gene("buy_limit_vol_3", 0, 'float', volume_limit_range))
+# master_genes.append(ga.master_gene("buy_limit_vol_1", 0, 'float', volume_limit_range))
+# master_genes.append(ga.master_gene("buy_limit_vol_2", 0, 'float', volume_limit_range))
+# master_genes.append(ga.master_gene("buy_limit_vol_3", 0, 'float', volume_limit_range))
 master_genes.append(ga.master_gene("volume_total_buy_limit", 0, 'float', double_range))
 
 master_genes.append(ga.master_gene("stop_loss_parameter", 0, 'float', f_range))
@@ -159,19 +161,19 @@ master_genes.append(ga.master_gene("trailing_stop_parameter", 0, 'float', f_rang
 master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', big_range))
 
 ###GA parameters
-pop_size = 120
+pop_size = 10
 tournament_size = 2
 tournament_co_winners = 1
 tour_parents = pop_size / 2
 prob_mutation = 0.05
 sigma = 1
 min_step = 0.05
-offspring_size = int(pop_size * 0.9)
+offspring_size = 8 #int(pop_size * 0.9)
 number_parents_crossover = 4
 crossover_rate = 0.9
-elites_size = int(pop_size * 0.1)
-ga_runs = 20
-ga_reps = 5
+elites_size = 2 #int(pop_size * 0.1)
+ga_runs = 1
+ga_reps = 2
 if pop_size != (offspring_size + elites_size):
     raise Exception("Size of offspring plus size of elites must equal population size")
 
