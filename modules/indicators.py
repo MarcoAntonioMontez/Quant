@@ -4,6 +4,7 @@
 def indicator_cross(strategy,ticker, indicator, params):
     if indicator == 'aroon':
         return aroon_cross(strategy,ticker, params)
+    # if indicator == 'aroon_s':
     else:
         raise Exception('Indicator: ' + str(indicator) + ' is not implemented in indicator_cross')
 

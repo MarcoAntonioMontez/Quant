@@ -169,4 +169,9 @@ class Trader:
                 new_field = 'score_' + indicators_name[i]
                 df1[ticker, new_field] = self.score_binary(df1[ticker, indicators_name[i]], sell_limit)
                 df1[ticker, 'total_score'] = df1[ticker, 'total_score'] + df1[ticker, new_field] * weights[i]
+
+        entry_ind = 'aroon_s'#inputs['entry_indicator']
+        entry_ind_period = int(inputs['entry_indicator_period'])
+        # entry_ind_name = entry_ind + str(entry_ind_period)
+        df1 = ta.add_ratio(df1,entry_ind,parameter=entry_ind_period)
         return df1
