@@ -188,7 +188,7 @@ for j in range(0, ga_reps):
     # display(pop[0,:])
 
     print("Init: ")
-    fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
+    fitness_array = ga.fitness_pop(pop, dictionary, master_genes, dataset)
     most_fit, average_fit = ga.fitness_stats(fitness_array)
     ga_results.append((most_fit, average_fit))
 
@@ -203,7 +203,7 @@ for j in range(0, ga_reps):
         pop = np.concatenate((elites, crossed))
         pop = ga.normalize_weights(pop, weight_names, master_genes)
         pop = ga.normalize_weights(pop, exit_names, master_genes)
-        fitness_array = ga.fitness_pop(pop, dictionary, master_genes, truncated_dataset)
+        fitness_array = ga.fitness_pop(pop, dictionary, master_genes, dataset)
         most_fit, average_fit = ga.fitness_stats(fitness_array)
 
         ga_results.append((most_fit, average_fit))
