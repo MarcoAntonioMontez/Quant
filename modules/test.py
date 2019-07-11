@@ -21,7 +21,7 @@ sp500_name = 'SP500_index_prices_2005-01-01_2018-12-31.csv'
 
 sp500 = pd.read_csv(data_path + sp500_name,index_col=0)
 
-update_fields = False
+update_fields = True
 
 if update_fields:
     prices = '21_sample_2005_2016.csv'
@@ -55,12 +55,12 @@ all_companies = list(set(bad_companies + ok_companies + good_companies))
 # tickers = 'MOS'
 stock_name = 'LH'
 tickers = ['LH']
-# tickers = good_companies
+tickers = all_companies
 
 
 dictionary = {}
 dictionary['start_date'] = '2010-1-1'
-dictionary['end_date'] = '2011-12-31'
+dictionary['end_date'] = '2012-12-31'
 dictionary['initial_capital'] = 10000
 dictionary['tickers'] = tickers
 dictionary['strategy'] = 'modular_strategy'
@@ -74,7 +74,7 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'trailing_stop_parameter':4.289,
                                  'close_name':price_field,
                                  'scale_out_ratio': 0.5,
-                                 'entry_indicator':'aroon_s',
+                                 'entry_indicator':'aroon',
                                  'entry_indicator_period':14,
                                  'exit_indicator':'None', #ssl
                                  'exit_indicator_period':20,
@@ -84,9 +84,9 @@ dictionary['strategy_params'] = {'big_ema':200,
                                  'weight_vol_1':0.358,
                                  'weight_vol_2':0.246,
                                  'weight_vol_3':0.395,
-                                 'buy_limit_vol_1': 0,
-                                 'buy_limit_vol_2':0,
-                                 'buy_limit_vol_3':0,
+                                 'buy_limit_vol_1': 0.177,
+                                 'buy_limit_vol_2':0.282,
+                                 'buy_limit_vol_3':-0.038,
                                  'volume_total_buy_limit':0.259,
                                  'exit_ind_1':'aroon_s',
                                  'exit_ind_2':'ssl_s', #ssl_line
@@ -102,6 +102,7 @@ dictionary['strategy_params'] = {'big_ema':200,
 user_input = UserInput(dictionary)
 trader = Trader(dataset,user_input)
 truncated_dataset = trader.dataset
+
 
 
 values = [14, 20, 25, 30, 50]
@@ -126,36 +127,39 @@ i_max = len(encoding_period) - 1
 f_range = (f_min, f_max)
 # period_range = (i_min, i_max)
 unit_range = (0, 1)
-double_range = (-0.5, 1.5)
+double_range = (0, 1.5)
 volume_limit_range = (-0.5, 0.5)
 total_buy_limit_range = (0, 1)
 period_range = (10, 50)
+big_range= (0.5, 50)
+ema_slope_param = (10,200)
 
 weight_names = ['weight_vol_1', 'weight_vol_2', 'weight_vol_3']
 exit_names = ['weight_exit_1', 'weight_exit_2', 'weight_exit_3']
 
 master_genes = []
-master_genes.append(ga.master_gene("entry_indicator_period",0, 'float',period_range))
-
 master_genes.append(ga.master_gene("weight_exit_1", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_exit_2", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_exit_3", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("exit_ind_1_param", 0, 'float', period_range))
 master_genes.append(ga.master_gene("exit_ind_2_param", 0, 'float', period_range))
-master_genes.append(ga.master_gene("exit_ind_3_param", 0, 'float', period_range))
+master_genes.append(ga.master_gene("exit_ind_3_param", 0, 'float', ema_slope_param))
 master_genes.append(ga.master_gene("confirmation_total_buy_limit", 0, 'float', double_range))
 
 master_genes.append(ga.master_gene("weight_vol_1", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_vol_2", 0, 'float', unit_range))
 master_genes.append(ga.master_gene("weight_vol_3", 0, 'float', unit_range))
+master_genes.append(ga.master_gene("buy_limit_vol_1", 0, 'float', volume_limit_range))
+master_genes.append(ga.master_gene("buy_limit_vol_2", 0, 'float', volume_limit_range))
+master_genes.append(ga.master_gene("buy_limit_vol_3", 0, 'float', volume_limit_range))
 master_genes.append(ga.master_gene("volume_total_buy_limit", 0, 'float', double_range))
 
 master_genes.append(ga.master_gene("stop_loss_parameter", 0, 'float', f_range))
 master_genes.append(ga.master_gene("trailing_stop_parameter", 0, 'float', f_range))
-master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', f_range))
+master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', big_range))
 
 ###GA parameters
-pop_size = 20
+pop_size = 120
 tournament_size = 2
 tournament_co_winners = 1
 tour_parents = pop_size / 2
@@ -163,11 +167,11 @@ prob_mutation = 0.05
 sigma = 1
 min_step = 0.05
 offspring_size = int(pop_size * 0.9)
-number_parents_crossover = 2
+number_parents_crossover = 4
 crossover_rate = 0.9
 elites_size = int(pop_size * 0.1)
-ga_runs = 2
-ga_reps = 2
+ga_runs = 20
+ga_reps = 5
 if pop_size != (offspring_size + elites_size):
     raise Exception("Size of offspring plus size of elites must equal population size")
 
@@ -204,7 +208,7 @@ for j in range(0, ga_reps):
     ga_simulation_1.append(ga_results)
     best_elite = ga.elite_individuals(pop, fitness_array, 1)
     print('\n'+ str(best_elite))
-    logs.save_trader_logs(master_genes, trader, best_elite, most_fit, 'sim' + str(j))
+    logs.save_trader_logs(master_genes, trader, best_elite, most_fit,ga_simulation_1, 'sim' + str(j))
 
 ga_results = np.array(ga_simulation_1)
 print('\n Ga_results[most_fit, avg_fit]\n')

@@ -51,6 +51,7 @@ def save_trader_logs(master_genes,trader,best_chromossome,fitness, ga_simulation
         json.dump(ga_simulations, outfile)
     return path
 
+
 def get_trader_logs(foldername=None, dirpath=None, fullpath=None):
     if foldername is None and fullpath is None:
         raise Exception('foldername or fullpath parameters were not entered')
