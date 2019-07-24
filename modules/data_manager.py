@@ -17,7 +17,7 @@ def load_csv(df_path, dataset_type=0):
     if (dataset_type == 0):
         df = pd.read_csv(df_path, index_col=0)
         df['datadate'] = pd.to_datetime(df['datadate'], format="%d/%m/%Y", errors='coerce')
-        df['rdq'] = pd.to_datetime(df['rdq'], format="%d/%m/%Y", errors='coerce')
+        # df['rdq'] = pd.to_datetime(df['rdq'], format="%d/%m/%Y", errors='coerce')
     elif (dataset_type == 1):
         df = pd.read_csv(df_path, header=[0, 1], index_col=0)
         df.index = pd.to_datetime(df.index, format="%Y-%m-%d")
@@ -25,6 +25,13 @@ def load_csv(df_path, dataset_type=0):
         df = pd.read_csv(df_path, index_col=0)
         df['from'] = pd.to_datetime(df['from'], format="%d/%m/%Y", errors='coerce')
         df['thru'] = pd.to_datetime(df['thru'], format="%d/%m/%Y", errors='coerce')
+    elif (dataset_type == 3):
+        df = pd.read_csv(df_path, index_col=0)
+        df['datadate'] = pd.to_datetime(df['datadate'], format="%d/%m/%Y", errors='coerce')
+        df['rdq'] = pd.to_datetime(df['rdq'], format="%d/%m/%Y", errors='coerce')
+    else:
+        raise Exception('Error!Dataset type note recognized')
+
     return df
 
 
