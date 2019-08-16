@@ -77,6 +77,13 @@ def update_params(trader_params, decoded_chromossome):
             d[key] = decoded_chromossome[key]
     return trader_params
 
+def update_first_params(trader_params, decoded_chromossome):
+    trader_params = trader_params.copy()
+    d = trader_params
+    for key in decoded_chromossome.keys():
+            d[key] = decoded_chromossome[key]
+    return trader_params
+
 
 def calc_roi(holdings):
     start_price = holdings['_net worth'].iloc[0]
@@ -133,7 +140,7 @@ def non_uniform_mutation(value, range_values, prob, sigma, min_step):
     if prob < random.random():
         return value
     while True:
-        step = sigma * np.random.normal()
+        step = sigma * np.random.normal() * value
         if abs(step) < min_step:
             step = min_step * np.sign(step)
         new_value = value + step
@@ -261,3 +268,147 @@ def normalize_weights(pop, weight_names, master_list):
                     if value == pop[i, k]:
                         pop[i, k] = key
     return np.around(pop, decimals=3)
+
+
+def create_trader_dict():
+    dictionary = {}
+    dictionary['start_date'] = '2010-1-1'
+    dictionary['end_date'] = '2013-12-31'
+    dictionary['initial_capital'] = 10000
+    dictionary['tickers'] = []
+    dictionary['strategy'] = 'modular_strategy'
+    dictionary['strategy_params'] = {'big_ema': 200,
+                                     'small_ema': 20,
+                                     'stop_loss_type': 'atr20',
+                                     'stop_loss_parameter': 2.143,
+                                     'take_profit_type': 'atr20',
+                                     'take_profit_parameter': 200,
+                                     'trailing_stop_type': 'atr20',
+                                     'trailing_stop_parameter': 4.289,
+                                     'close_name': 'Close',
+                                     'scale_out_ratio': 0.5,
+                                     'entry_indicator': 'aroon_s',
+                                     'entry_indicator_period': 1,
+                                     'exit_indicator': 'None',  # ssl
+                                     'exit_indicator_period': 20,
+                                     'buy_limit_vol_1': 0,
+                                     'buy_limit_vol_2': 0,
+                                     'buy_limit_vol_3': 0,
+                                     'volume_total_buy_limit': 0,
+                                     'exit_ind_1_param': 14.0,
+                                     'exit_ind_2_param': 20.0,
+                                     'exit_ind_3_param': 100,
+                                     'exit_ind_1': 'aroon_s',
+                                     'exit_ind_2': 'ssl_s',  # ssl_line
+                                     'exit_ind_3': 'ema_slope',  # sar_line
+                                     'volume_ind_1': 'cmf20',
+                                     'volume_ind_2': 'cmo14',
+                                     'volume_ind_3': 'mfi14',
+                                     'weight_exit_1': 0.15,
+                                     'weight_exit_2': 0.15,
+                                     'weight_exit_3': 0.15,
+                                     'weight_vol_1': 0.15,
+                                     'weight_vol_2': 0.15,
+                                     'weight_vol_3': 0.15,
+                                     'confirmation_total_buy_limit': 0.7,
+                                     }
+
+    return dictionary
+def master_genes_calc():
+    f_range = (0.5, 10)
+    unit_range = (0, 1)
+    period_range = [10, 50]
+
+    master_genes = []
+
+    master_genes.append(master_gene("exit_ind_1_param", 0, 'float', period_range))
+    master_genes.append(master_gene("exit_ind_2_param", 0, 'float', period_range))
+    master_genes.append(master_gene("exit_ind_3_param", 0, 'float', period_range))
+    master_genes.append(master_gene("weight_exit_1", 0, 'float', unit_range))
+    master_genes.append(master_gene("weight_exit_2", 0, 'float', unit_range))
+    master_genes.append(master_gene("weight_exit_3", 0, 'float', unit_range))
+    master_genes.append(master_gene("weight_vol_1", 0, 'float', unit_range))
+    master_genes.append(master_gene("weight_vol_2", 0, 'float', unit_range))
+    master_genes.append(master_gene("weight_vol_3", 0, 'float', unit_range))
+
+    master_genes.append(master_gene("stop_loss_parameter", 0, 'float', f_range))
+    master_genes.append(master_gene("trailing_stop_parameter", 0, 'float', f_range))
+
+    return master_genes
+
+def trader_dict_calc(trader_params):
+    trader_dictionary = create_trader_dict()
+    trader_dictionary = update_first_params(trader_dictionary, trader_params)
+    return trader_dictionary
+
+
+def main(dataset, trader_params,ga_params):
+
+    # trader_dictionary = create_trader_dict()
+    trader_dictionary = trader_dict_calc(trader_params)
+
+    user_input = UserInput(trader_dictionary)
+    trader = Trader(dataset, user_input)
+    ###missing ga update params
+
+
+    truncated_dataset = trader.dataset
+    master_genes = master_genes_calc()
+
+    weight_names = ['weight_vol_1', 'weight_vol_2', 'weight_vol_3']
+    exit_names = ['weight_exit_1', 'weight_exit_2', 'weight_exit_3']
+
+    ###GA parameters
+    pop_size = ga_params['pop_size']
+    tournament_size = 2
+    tournament_co_winners = 1
+    tour_parents = pop_size / 2
+    prob_mutation = 0.05
+    sigma = 0.5
+    min_step = 0.05
+    offspring_size = int(pop_size * 0.8)
+    number_parents_crossover = 2
+    crossover_rate = 0.9
+    elites_size = int(pop_size * 0.2)
+    ga_runs = ga_params['ga_runs']
+    ga_reps = ga_params['ga_reps']
+    if pop_size != (offspring_size + elites_size):
+        raise Exception("Size of offspring plus size of elites must equal population size")
+
+    ga_simulation_1 = []
+    for j in range(0, ga_reps):
+        ga_results = []
+        print("Simulation: " + str(j + 1))
+
+        pop = init_pop(master_genes, pop_size)
+        pop = normalize_weights(pop, weight_names + exit_names, master_genes)
+        #     pop = normalize_weights(pop,exit_names,master_genes)
+        # display(pop[0,:])
+
+        print("Init: ")
+        fitness_array = fitness_pop(pop, trader_dictionary, master_genes, dataset)
+        most_fit, average_fit = fitness_stats(fitness_array)
+        ga_results.append((most_fit, average_fit))
+
+        for i in range(0, ga_runs):
+            print("Iteration: " + str(i + 1))
+            elites = elite_individuals(pop, fitness_array, elites_size)
+            best_elite = elite_individuals(pop, fitness_array, 1)
+            print(repr(best_elite))
+            selected_parents = tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
+            mutated = mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
+            crossed = crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
+            pop = np.concatenate((elites, crossed))
+            pop = normalize_weights(pop, weight_names + exit_names, master_genes)
+            #         pop = normalize_weights(pop,exit_names,master_genes)
+            fitness_array = fitness_pop(pop, trader_dictionary, master_genes, dataset)
+            most_fit, average_fit = fitness_stats(fitness_array)
+
+            ga_results.append((most_fit, average_fit))
+        ga_simulation_1.append(ga_results)
+        best_elite = elite_individuals(pop, fitness_array, 1)
+        #     display(best_elite)
+        print(repr(best_elite))
+
+        # logs.save_trader_logs(master_genes, trader, best_elite, most_fit, ga_simulation_1, 'sim')
+    return {'trader': trader, 'master_genes': master_genes,'trader_dictionary': trader_dictionary}

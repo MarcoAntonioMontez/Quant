@@ -336,3 +336,35 @@ def add_ma(ratios,ratios_names,periods):
             d['parameter'] = period
             ratios.append(d)
 
+def buy_hold_roi(dataset,init_year,end_year,tickers_dict):
+    time_range= range(init_year,end_year+1)
+
+    last_year_ret = 1
+    total_year_returns = pd.Series()
+    for year in time_range:
+        start_date = str(year)+'-01-01'
+        end_date = str(year)+'-12-31'
+        aux = dm.data_between_dates(start_date,end_date,dataset.copy(),1)
+        tickers = tickers_dict[year]
+
+        first_level = tickers
+        second_level = ['Close'] * len(first_level)
+        selector = list(zip(first_level, second_level))
+
+        stock_prices = aux[selector]
+        stock_prices.columns = stock_prices.columns.droplevel(1)
+
+        df = stock_prices
+        df[first_level] = df[first_level].div(df.iloc[0], axis=1)
+
+        returns_year=df.mean(axis=1)
+        if list(tickers):
+            total_year_returns = total_year_returns.append(returns_year*last_year_ret)
+            last_year_ret = total_year_returns.values[-1]
+        else:
+            new_series = pd.Series(last_year_ret,index = aux.index.values)
+            total_year_returns = total_year_returns.append(new_series)
+
+    buy_hold = (total_year_returns -1)
+    return buy_hold
+

@@ -13,23 +13,25 @@ class Trader:
     def __init__(self, dataset, user_input):
         self.user_input = user_input
         self.initial_capital = user_input.initial_capital
-        self.tickers = user_input.tickers
         self.strategy_name = user_input.strategy
         dates_dict = self.adjusted_dates(dataset, user_input.start_date, user_input.end_date)
         self.start_date = dates_dict['start_date']
         self.end_date = dates_dict['end_date']
         self.original_dataset = dataset
         self.dataset = self.truncate_dataset(dataset)
-        self.volume_indicators_table = self.create_volume_ind_table()
-        self.confirmation_indicators_table = self.create_confirmation_ind_table()
-        self.volume_table = self.truncate_dataset(self.volume_indicators_table)
-        self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
 
         self.end_date = self.dataset.index[-1].date()
         self.portfolio = Portfolio(self.initial_capital, self.start_date, self.dataset)
         self.portfolio.set_trader(self)
         self.start_date = self.portfolio.start_day
         self.current_day = self.start_date
+        self.tickers = user_input.tickers[self.current_day.year]
+
+        # self.volume_indicators_table = self.create_volume_ind_table()
+        self.confirmation_indicators_table = self.create_confirmation_ind_table()
+        # self.volume_table = self.truncate_dataset(self.volume_indicators_table)
+        self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
+
         self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
 
@@ -104,12 +106,44 @@ class Trader:
 
 
     def run_simulation(self):
+        curr_year = self.current_day.year
+        # print('\n')
+        # print(curr_year)
+        # display(self.confirmation_indicators_table)
+        # print('\n')
         while(self.current_day < self.end_date):
             self.simulate_day()
             self.next_day()
+
+            if self.current_day.year > curr_year:
+                self.portfolio.sell_all_stocks()
+                curr_year = self.current_day.year
+                self.tickers = self.user_input.tickers[self.current_day.year]
+                # self.volume_indicators_table = self.create_volume_ind_table()
+                self.confirmation_indicators_table = self.create_confirmation_ind_table()
+                # self.volume_table = self.truncate_dataset(self.volume_indicators_table)
+                self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
+
+                self.strategy = Strategy(self.strategy_name, self.user_input.strategy_params, self.dataset, self.tickers,
+                                         self.portfolio)
+                # print('\n')
+                # print(curr_year)
+                # display(self.confirmation_indicators_table)
+                # print('sold_all stocks')
+                # print('\n')
+
+                # self.tickers
+
+            # self.strategy = Strategy(self.strategy_name, self.user_input.strategy_params, self.dataset, self.tickers,
+            #                          self.portfolio)
+
+            ### if year has ended than
+            # upgrade tickers
+            # sell stocks that are not in next year tickers list
         self.portfolio.sell_all_stocks()
             # print('Current day:' + str(curren))
             # print(self.current_day)
+            # update indicator confirmation table
 
 
     def score_binary(self,ratio, buy_limit):
@@ -143,6 +177,11 @@ class Trader:
         params = [int(inputs['exit_ind_1_param']), int(inputs['exit_ind_2_param']), int(inputs['exit_ind_3_param'])]
         weights = [inputs['weight_exit_1'], inputs['weight_exit_2'], inputs['weight_exit_3']]
         fields = ['Close','Open','High','Low']
+        #
+        vol_indicators = [inputs['volume_ind_1'], inputs['volume_ind_2'], inputs['volume_ind_3']]
+        fields = fields + vol_indicators
+        vol_weights = [inputs['weight_vol_1'], inputs['weight_vol_2'], inputs['weight_vol_3']]
+        #
         tickers = self.tickers
         idx = pd.IndexSlice
         df1 = self.original_dataset.loc[:, idx[tickers, fields]].copy()
@@ -162,6 +201,9 @@ class Trader:
                         indicators_name[i] += ('_' + str(p))
             else:
                 indicators_name[i] += ('' + str(params[i]))
+
+        indicators_name = indicators_name + vol_indicators
+        weights = weights + vol_weights
 
         for ticker in tickers:
             df1[ticker, 'total_score'] = 0

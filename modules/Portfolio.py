@@ -317,9 +317,9 @@ class Portfolio:
     def sell_all_stocks(self):
         for order in self.open_orders:
             order.sell_stock('simulation_ended')
-            self.close_order(order.stock)
-
-
+            self.add_order_log(order)
+        self.open_orders = []
+            # self.close_order(order.stock)
 
 
 
