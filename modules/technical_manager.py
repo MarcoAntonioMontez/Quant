@@ -368,3 +368,29 @@ def buy_hold_roi(dataset,init_year,end_year,tickers_dict):
     buy_hold = (total_year_returns -1)
     return buy_hold
 
+def n_largest(dataset,tickers,year,n,field='revt'):
+    year = year -1
+
+    revg_df=pd.DataFrame(columns = ['rev_g'])
+    for ticker in tickers:
+        company_data = dataset[dataset['tic']==ticker]
+        company_data = company_data[['fyear',field]].set_index('fyear').dropna()
+        col = company_data
+        col = col.loc[~col.index.duplicated(keep='first')]
+        result = (col.diff()/col.shift().abs())
+        try:
+            value = result.loc[year][0]
+        except KeyError:
+            value = np.nan
+        new_df = pd.DataFrame([value],index=[ticker],columns = ['rev_g'])
+        revg_df = revg_df.append(new_df)
+
+    n_largest_tickers = revg_df.nlargest(n,'rev_g').index.values.tolist()
+    return n_largest_tickers
+
+def filter_n_largest(dataset,dictionary,n):
+    new_dict = {}
+    for year in dictionary.keys():
+        new_dict[year] = n_largest(dataset,dictionary[year],year,n)
+    return new_dict
+
