@@ -318,6 +318,7 @@ class Portfolio:
         for order in self.open_orders:
             order.sell_stock('simulation_ended')
             self.add_order_log(order)
+        self.update_day_holdings()
         self.open_orders = []
             # self.close_order(order.stock)
 

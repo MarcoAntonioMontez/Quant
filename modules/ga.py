@@ -277,6 +277,7 @@ def create_trader_dict():
     dictionary['end_date'] = '2013-12-31'
     dictionary['initial_capital'] = 10000
     dictionary['tickers'] = []
+    dictionary['chromosome_list'] = []
     dictionary['strategy'] = 'modular_strategy'
     dictionary['strategy_params'] = {'big_ema': 200,
                                      'small_ema': 20,
@@ -345,11 +346,16 @@ def trader_dict_calc(trader_params):
 
 def simulate(dataset, trader_params,chromossome_ex):
     dictionary = trader_dict_calc(trader_params)
-    master_genes = master_genes_calc()
-    decoded = decoder(chromossome_ex, master_genes)
-    trader_params_ex = update_params(dictionary, decoded)
+    if not trader_params['chromosome_list']:
+        master_genes = master_genes_calc()
+        decoded = decoder(chromossome_ex, master_genes)
+        trader_params_ex = update_params(dictionary, decoded)
+        user_input = UserInput(trader_params_ex)
+    else :
+        # display('\n\n Chromosome ex not included\n\n')
+        user_input = UserInput(dictionary)
 
-    user_input = UserInput(trader_params_ex)
+    # display(user_input.inputs['strategy_params'])
     trader = Trader(dataset, user_input)
 
     trader.run_simulation()
@@ -362,10 +368,16 @@ def simulate(dataset, trader_params,chromossome_ex):
 
     roi = stats['roi']
 
-    return {'roi': roi}
+    return {'roi': roi,'trader': trader}
 
 
 def main(dataset, trader_params,ga_params):
+
+    ##
+    ##
+    ##
+    ##See if this makes sense !!!
+    trader_params['chromosome_list']=[]
 
     # trader_dictionary = create_trader_dict()
     trader_dictionary = trader_dict_calc(trader_params)

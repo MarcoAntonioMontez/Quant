@@ -23,7 +23,7 @@ class Statistics:
         return tm.roi_order_list(orders)
 
     def calc_roi(self, df):
-        start_price = df['_net worth'].iloc[0]
+        start_price = df['_net worth'].iloc[0] + df['_transaction costs'].iloc[0]
         end_price = df['_net worth'].iloc[-1]
         roi = 100 * (end_price - start_price) / start_price
         self.roi = roi

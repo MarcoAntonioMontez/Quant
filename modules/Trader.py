@@ -4,9 +4,10 @@ import datetime
 from modules import data_manager as dm
 from modules.Portfolio import Portfolio
 from modules.Strategy import Strategy
-from modules import UserInput
+from modules.UserInput import UserInput
 from modules.Order import Order
 from modules import technical_manager as ta
+# from modules import ga
 
 
 class Trader:
@@ -25,14 +26,13 @@ class Trader:
         self.portfolio.set_trader(self)
         self.start_date = self.portfolio.start_day
         self.current_day = self.start_date
-        self.tickers = user_input.tickers[self.current_day.year]
-
+        # self.tickers = user_input.tickers[self.current_day.year]
         # self.volume_indicators_table = self.create_volume_ind_table()
-        self.confirmation_indicators_table = self.create_confirmation_ind_table()
-        # self.volume_table = self.truncate_dataset(self.volume_indicators_table)
-        self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
-
-        self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
+        # self.confirmation_indicators_table = self.create_confirmation_ind_table()
+        # # self.volume_table = self.truncate_dataset(self.volume_indicators_table)
+        # self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
+        #
+        # self.strategy = Strategy(self.strategy_name, user_input.strategy_params, self.dataset, self.tickers, self.portfolio)
         self.number_shares = 100
 
 
@@ -93,6 +93,7 @@ class Trader:
                 open_order.sell_stock(order['exit_type'])
                 #remove open_order
                 self.portfolio.close_order(order['Stock'])
+                self.portfolio.update_day_holdings()
             elif order['Type'] == 'scale_out':
                 open_order = self.portfolio.get_open_order(order['Stock'])
                 open_order.scale_out_stock()
@@ -104,17 +105,48 @@ class Trader:
     def get_holdings(self):
         return self.portfolio.get_holdings()
 
+    def get_year_chromosome(self,year):
+        year_found_flag = False
+        for d in self.user_input.inputs['chromosome_list']:
+            if d['year'] == year:
+                year_found_flag = True
+                return d['chromosome']
+
+        if not year_found_flag:
+            raise Exception('Error! Year "' + str(year) + '" not in chromosome list!')
+        return
+
+    def update_chromosome(self,year):
+        from modules import ga
+        if not self.user_input.inputs['chromosome_list']:
+            return
+        dictionary = self.user_input.inputs
+        chromosome_ex = self.get_year_chromosome(year)
+        master_genes = ga.master_genes_calc()
+        decoded = ga.decoder(chromosome_ex, master_genes)
+        trader_params_ex = ga.update_params(dictionary, decoded)
+
+        updated_user_input = UserInput(trader_params_ex)
+        self.user_input = updated_user_input
+        return
 
     def run_simulation(self):
         curr_year = self.current_day.year
-        #update chromosome params
+        # display(self.user_input.inputs)
+
+        self.update_chromosome(curr_year)
+        self.tickers = self.user_input.tickers[curr_year]
+        self.confirmation_indicators_table = self.create_confirmation_ind_table()
+        self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
+        self.strategy = Strategy(self.strategy_name, self.user_input.strategy_params, self.dataset, self.tickers,
+                                 self.portfolio)
 
         while(self.current_day < self.end_date):
             self.simulate_day()
             self.next_day()
 
             if self.current_day.year > curr_year:
-                #Update chromosome params
+                self.update_chromosome(self.current_day.year)
                 self.portfolio.sell_all_stocks()
                 curr_year = self.current_day.year
                 self.tickers = self.user_input.tickers[self.current_day.year]
