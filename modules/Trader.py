@@ -107,44 +107,22 @@ class Trader:
 
     def run_simulation(self):
         curr_year = self.current_day.year
-        # print('\n')
-        # print(curr_year)
-        # display(self.confirmation_indicators_table)
-        # print('\n')
+        #update chromosome params
+
         while(self.current_day < self.end_date):
             self.simulate_day()
             self.next_day()
 
             if self.current_day.year > curr_year:
+                #Update chromosome params
                 self.portfolio.sell_all_stocks()
                 curr_year = self.current_day.year
                 self.tickers = self.user_input.tickers[self.current_day.year]
-                # self.volume_indicators_table = self.create_volume_ind_table()
                 self.confirmation_indicators_table = self.create_confirmation_ind_table()
-                # self.volume_table = self.truncate_dataset(self.volume_indicators_table)
                 self.confirmation_indicators_table = self.truncate_dataset(self.confirmation_indicators_table)
-
                 self.strategy = Strategy(self.strategy_name, self.user_input.strategy_params, self.dataset, self.tickers,
                                          self.portfolio)
-                # print('\n')
-                # print(curr_year)
-                # display(self.confirmation_indicators_table)
-                # print('sold_all stocks')
-                # print('\n')
-
-                # self.tickers
-
-            # self.strategy = Strategy(self.strategy_name, self.user_input.strategy_params, self.dataset, self.tickers,
-            #                          self.portfolio)
-
-            ### if year has ended than
-            # upgrade tickers
-            # sell stocks that are not in next year tickers list
         self.portfolio.sell_all_stocks()
-            # print('Current day:' + str(curren))
-            # print(self.current_day)
-            # update indicator confirmation table
-
 
     def score_binary(self,ratio, buy_limit):
         # print(ratio.name[1])

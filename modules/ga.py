@@ -7,6 +7,7 @@ from modules.Order import Order
 from modules.Trader import Trader
 import random
 from collections import OrderedDict
+from modules.Statistics import Statistics
 
 
 def master_gene(name, id, type, range):
@@ -342,6 +343,28 @@ def trader_dict_calc(trader_params):
     return trader_dictionary
 
 
+def simulate(dataset, trader_params,chromossome_ex):
+    dictionary = trader_dict_calc(trader_params)
+    master_genes = master_genes_calc()
+    decoded = decoder(chromossome_ex, master_genes)
+    trader_params_ex = update_params(dictionary, decoded)
+
+    user_input = UserInput(trader_params_ex)
+    trader = Trader(dataset, user_input)
+
+    trader.run_simulation()
+
+    orders_log = trader.portfolio.orders_log
+    holdings = trader.portfolio.get_holdings()
+
+    statistics = Statistics(orders_log, holdings)
+    stats = statistics.get_dict()
+
+    roi = stats['roi']
+
+    return {'roi': roi}
+
+
 def main(dataset, trader_params,ga_params):
 
     # trader_dictionary = create_trader_dict()
@@ -411,4 +434,4 @@ def main(dataset, trader_params,ga_params):
         print(repr(best_elite))
 
         # logs.save_trader_logs(master_genes, trader, best_elite, most_fit, ga_simulation_1, 'sim')
-    return {'trader': trader, 'master_genes': master_genes,'trader_dictionary': trader_dictionary}
+    return {'master_genes': master_genes, 'trader_dictionary': trader_dictionary, 'best_chromosome': best_elite[0], 'best_roi' : most_fit}
