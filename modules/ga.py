@@ -87,7 +87,7 @@ def update_first_params(trader_params, decoded_chromossome):
 
 
 def calc_roi(holdings):
-    start_price = holdings['_net worth'].iloc[0]
+    start_price = holdings['_net worth'].iloc[0] + holdings['_transaction costs'].iloc[0]
     end_price = holdings['_net worth'].iloc[-1]
     roi = 100 * (end_price - start_price) / start_price
     return roi
