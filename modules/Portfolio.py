@@ -78,7 +78,7 @@ class Portfolio:
                 tickers.append(ticker)
 
         for ticker in tickers:
-            number_shares = df[ticker].iloc[-1]
+            number_shares = df.at[self.current_day, ticker]
             if number_shares > 0:
                 current_stocks.append(ticker)
         return current_stocks
