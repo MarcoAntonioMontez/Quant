@@ -84,14 +84,13 @@ class Portfolio:
         return current_stocks
 
     def get_num_shares(self, ticker):
-        number_shares = 0
         df = self.holdings
-        last_row = df.iloc[-1:].copy()
+        available_tickers = df.columns.values
 
-        if ticker not in list(last_row.columns.values):
-            raise Exception('Cant get # shares, stock doesnt exist in holding.dataframe')
+        if ticker not in list(available_tickers):
+            raise Exception('Cant get # shares, stock: ' + str(ticker) + ' doesnt exist in holding.dataframe')
 
-        number_shares = last_row.loc[last_row.index[-1]].at[ticker]
+        number_shares = df.at[self.current_day, ticker]
         return number_shares
 
     def calc_net_worth(self):
