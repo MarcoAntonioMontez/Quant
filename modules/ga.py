@@ -400,6 +400,8 @@ def main(dataset, trader_params,ga_params):
     tour_parents = pop_size / 2
     prob_mutation = 0.05
     sigma = 0.5
+    hyper_prob_mutation = 1
+    hyper_sigma = 2
     min_step = 0.05
     offspring_size = int(pop_size * 0.8)
     number_parents_crossover = 2
@@ -431,7 +433,11 @@ def main(dataset, trader_params,ga_params):
         for i in range(0, ga_runs):
             print("Iteration: " + str(i + 1))
             selected_parents = tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
-            mutated = mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
+            if (average_fit > (most_fit*0.7)):
+                print('Hyper Mutation')
+                mutated = mutation_pop(selected_parents, master_genes, hyper_prob_mutation, hyper_sigma, min_step)
+            else:
+                mutated = mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
             crossed = crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
             pop = np.concatenate((elites, crossed))
             pop = normalize_weights(pop, weight_names + exit_names, master_genes)
