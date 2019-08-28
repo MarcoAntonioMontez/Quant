@@ -1,218 +1,127 @@
 import warnings
 import pandas as pd
 import numpy as np
-import sys,os
+import sys, os
+
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
+# import plotly
+# from plotly.offline import iplot
+# import plotly.graph_objs as go
+
+# plotly.offline.init_notebook_mode()
+from modules import logs_manager as logs
 from modules import data_manager as dm
 from modules import technical_manager as tm
+from modules import visualization_manager as vm
 from modules.UserInput import UserInput
 from modules.Trader import Trader
 from modules.Order import Order
 from modules.Statistics import Statistics
 from modules import ga
 from modules import logs_manager as logs
-pd.options.display.max_rows = 200
+import json
+
+pd.options.display.max_rows = 50
 
 data_path = '../data/'
-prices = '21_sample_2005_2016.csv'
-processed_prices = 'pre_processed_21_sample.csv'
+# prices = '21_sample_2005_2016.csv'
+prices = 'formated_prices_2005-01-01_2018-12-31.csv'
+processed_prices = 'pre_processed_prices.csv'
 price_field = 'Close'
 sp500_name = 'SP500_index_prices_2005-01-01_2018-12-31.csv'
+fundamentals = 'fundamental_2002_3.csv'
 
-sp500 = pd.read_csv(data_path + sp500_name,index_col=0)
+sp500 = pd.read_csv(data_path + sp500_name, index_col=0)
 
-update_fields = True
+update_fields = False
 
 if update_fields:
-    prices = '21_sample_2005_2016.csv'
-    dataset = dm.load_csv(data_path + prices,1)
-    ratios = [{'ratio_name':'ema', 'parameter':200},
-              {'ratio_name':'atr', 'parameter':20},
-              {'ratio_name':'atr', 'parameter':14},
-              {'ratio_name':'aroon', 'parameter':20},
-              {'ratio_name':'aroon', 'parameter':14},
-              {'ratio_name':'rsi', 'parameter':14},
-              {'ratio_name':'macd_diff', 'parameter':[12,26,9]},
-              {'ratio_name':'cmf', 'parameter':20},
-              {'ratio_name':'cmo', 'parameter':14},
-              {'ratio_name':'mfi', 'parameter':14}
-             ]
-    ratio_names = ['ema','sma']
-    periods = [20,30,50,100,200]
-    tm.add_ma(ratios,ratio_names,periods)
-    dataset = tm.preprocess_table(dataset, ratios,price_field)
+    #     prices = '21_sample_2005_2016.csv'
+    dataset = dm.load_csv(data_path + prices, 1)
+    ratios = [{'ratio_name': 'ema', 'parameter': 200},
+              {'ratio_name': 'atr', 'parameter': 20},
+              {'ratio_name': 'cmf', 'parameter': 20},
+              {'ratio_name': 'cmo', 'parameter': 14},
+              {'ratio_name': 'mfi', 'parameter': 14}
+              ]
+    #     ratio_names = ['ema','sma']
+    #     periods = [20,30,50,100,200]
+    #     tm.add_ma(ratios,ratio_names,periods)
+    dataset = tm.preprocess_table(dataset, ratios, price_field)
     dataset.to_csv(data_path + processed_prices)
 else:
-    dataset = dm.load_csv(data_path + processed_prices,1)
+    dataset = dm.load_csv(data_path + processed_prices, 1)
 
-# print(dataset.head())
+fundamental = dm.load_csv(data_path + fundamentals, 0)
 
-bad_companies = ['AKS','ETFC','LM', 'RF','OI','CLF','DO']
-ok_companies = ['TEX','BBT','MOS','CSCO','BC','FLR','FDX']
-good_companies = ['LH','PEP','NEE','EW','AOS','AAPL','NVDA']
-all_companies = list(set(bad_companies + ok_companies + good_companies))
-
-# tickers = 'MOS'
-stock_name = 'LH'
-tickers = ['LH']
-tickers = all_companies
+# print(fundamental.head())
 
 
-dictionary = {}
-dictionary['start_date'] = '2010-1-1'
-dictionary['end_date'] = '2012-12-31'
-dictionary['initial_capital'] = 10000
-dictionary['tickers'] = tickers
-dictionary['strategy'] = 'modular_strategy'
-dictionary['strategy_params'] = {'big_ema':200,
-                                 'small_ema':20,
-                                 'stop_loss_type':'atr20',
-                                 'stop_loss_parameter':2.143,
-                                 'take_profit_type':'atr20',
-                                 'take_profit_parameter':4.53,
-                                 'trailing_stop_type':'atr20',
-                                 'trailing_stop_parameter':4.289,
-                                 'close_name':price_field,
-                                 'scale_out_ratio': 0.5,
-                                 'entry_indicator':'aroon_s',
-                                 'entry_indicator_period':14,
-                                 'exit_indicator':'None', #ssl
-                                 'exit_indicator_period':20,
-                                 'volume_ind_1':'cmf20',
-                                 'volume_ind_2':'cmo14',
-                                 'volume_ind_3':'mfi14',
-                                 'weight_vol_1':0.358,
-                                 'weight_vol_2':0.246,
-                                 'weight_vol_3':0.395,
-                                 'buy_limit_vol_1': 0,
-                                 'buy_limit_vol_2':0,
-                                 'buy_limit_vol_3':0,
-                                 'volume_total_buy_limit':0.259,
-                                 'exit_ind_1':'aroon_s',
-                                 'exit_ind_2':'ssl_s', #ssl_line
-                                 'exit_ind_3':'ema_slope', #sar_line
-                                 'exit_ind_1_param': 14.0,
-                                 'exit_ind_2_param': 20.0,
-                                 'exit_ind_3_param': 30.0,
-                                 'weight_exit_1':0.33,
-                                 'weight_exit_2':0.33,
-                                 'weight_exit_3':0.33,
-                                 'confirmation_total_buy_limit': 0.7,
-                                  }
-user_input = UserInput(dictionary)
-trader = Trader(dataset,user_input)
-truncated_dataset = trader.dataset
+td_filename = '../data' + '/screened_tickers.json'
 
+with open(td_filename) as infile:
+    screened_tickers_original = json.load(infile)
 
+screened_tickers_original = {int(key):screened_tickers_original[key] for key in screened_tickers_original}
+tickers_dict = tm.filter_n_largest(fundamental,screened_tickers_original,15)
 
-values = [14, 20, 25, 30, 50]
-encoding_period = dict(zip(range(0, len(values)), values))
+# print(tickers_dict_original)
+# print(tickers_dict)
 
-values = ['None', 'ssl']
-encoding_exit_indicator = dict(zip(range(0, len(values)), values))
-exit_range = (0, len(values) - 1)
+tickers = tickers_dict
+train_results = []
+testing_range = range(2010, 2011 + 1)
+training_period = 1
 
-values = ['None', 'macd_s']
-encoding_baseline_type = dict(zip(range(0, len(values)), values))
-baseline_range = (0, len(values) - 1)
+trader_params = {'start_date': '2007-1-1',
+                 'end_date': '2018-12-31',
+                 'tickers': tickers,
+                 'chromosome_list': []
+                 }
 
-values = [12, 25]
-encoding_baseline_period = dict(zip(range(0, len(values)), values))
-baseline_period_range = (0, len(values) - 1)
+ga_params = {'pop_size': 10,
+             'ga_runs': 2,  # number of iterations
+             'ga_reps': 1  # number of independent simulations
+             }
 
-f_min = 0.5
-f_max = 10
-i_min = 0
-i_max = len(encoding_period) - 1
-f_range = (f_min, f_max)
-# period_range = (i_min, i_max)
-unit_range = (0, 1)
-double_range = (0, 1)
-volume_limit_range = (-0.5, 0.5)
-total_buy_limit_range = (0, 1)
-period_range = (10, 50)
-big_range= (0.5, 50)
-ema_slope_param = (10,200)
+test_chromosome_list = []
 
-weight_names = ['weight_vol_1', 'weight_vol_2', 'weight_vol_3']
-exit_names = ['weight_exit_1', 'weight_exit_2', 'weight_exit_3']
+ga_history = {}
 
-master_genes = []
-master_genes.append(ga.master_gene("entry_indicator_period",0, 'float',period_range))
+for year in testing_range:
+    start_train_year = year - training_period
+    end_train_year = year - 1
+    trader_params['start_date'] = str(start_train_year) + '-1-1'
+    trader_params['end_date'] = str(end_train_year) + '-12-31'
+    print('\n\nYear ' + str(year) + '\n')
+    data_params = ga.main(dataset, trader_params, ga_params)
 
-master_genes.append(ga.master_gene("weight_exit_1", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("weight_exit_2", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("weight_exit_3", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("exit_ind_1_param", 0, 'float', period_range))
-master_genes.append(ga.master_gene("exit_ind_2_param", 0, 'float', period_range))
-master_genes.append(ga.master_gene("exit_ind_3_param", 0, 'float', ema_slope_param))
-master_genes.append(ga.master_gene("confirmation_total_buy_limit", 0, 'float', double_range))
+    train_dict = {}
+    train_dict['start_date'] = trader_params['start_date']
+    train_dict['end_date'] = trader_params['end_date']
+    train_dict['train_roi'] = data_params['best_roi']
+    train_dict['best_chromosome'] = data_params['best_chromosome']
 
-master_genes.append(ga.master_gene("weight_vol_1", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("weight_vol_2", 0, 'float', unit_range))
-master_genes.append(ga.master_gene("weight_vol_3", 0, 'float', unit_range))
-# master_genes.append(ga.master_gene("buy_limit_vol_1", 0, 'float', volume_limit_range))
-# master_genes.append(ga.master_gene("buy_limit_vol_2", 0, 'float', volume_limit_range))
-# master_genes.append(ga.master_gene("buy_limit_vol_3", 0, 'float', volume_limit_range))
-master_genes.append(ga.master_gene("volume_total_buy_limit", 0, 'float', double_range))
+    test_trader_params = trader_params.copy()
+    test_trader_params['start_date'] = str(year) + '-1-1'
+    test_trader_params['end_date'] = str(year) + '-12-31'
 
-master_genes.append(ga.master_gene("stop_loss_parameter", 0, 'float', f_range))
-master_genes.append(ga.master_gene("trailing_stop_parameter", 0, 'float', f_range))
-master_genes.append(ga.master_gene("take_profit_parameter", 0, 'float', big_range))
+    chromosome_ex = data_params['best_chromosome']
 
-###GA parameters
-pop_size = 10
-tournament_size = 2
-tournament_co_winners = 1
-tour_parents = pop_size / 2
-prob_mutation = 0.05
-sigma = 1
-min_step = 0.05
-offspring_size = 8 #int(pop_size * 0.9)
-number_parents_crossover = 4
-crossover_rate = 0.9
-elites_size = 2 #int(pop_size * 0.1)
-ga_runs = 1
-ga_reps = 2
-if pop_size != (offspring_size + elites_size):
-    raise Exception("Size of offspring plus size of elites must equal population size")
+    test_data = ga.simulate(dataset, test_trader_params, chromosome_ex)
+    train_dict['test_roi'] = test_data['roi']
+    train_dict['test_year'] = year
 
-ga_simulation_1 = []
-for j in range(0, ga_reps):
-    ga_results = []
-    print("Simulation: " + str(j + 1))
+    ga_history[str(year-training_period) + ':'+ str(year-1)] = data_params['ga_history']
 
-    pop = ga.init_pop(master_genes, pop_size)
-    pop = ga.normalize_weights(pop, weight_names, master_genes)
-    pop = ga.normalize_weights(pop, exit_names, master_genes)
-    # display(pop[0,:])
+    chromosome_dict = {'year': year,
+                       'chromosome': chromosome_ex}
 
-    print("Init: ")
-    fitness_array = ga.fitness_pop(pop, dictionary, master_genes, dataset)
-    most_fit, average_fit = ga.fitness_stats(fitness_array)
-    ga_results.append((most_fit, average_fit))
+    test_chromosome_list.append(chromosome_dict)
+    train_results.append(train_dict)
 
-    for i in range(0, ga_runs):
-        print("Iteration: " + str(i + 1))
-        elites = ga.elite_individuals(pop, fitness_array, elites_size)
-        best_elite = ga.elite_individuals(pop, fitness_array, 1)
-        print(best_elite)
-        selected_parents = ga.tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
-        mutated = ga.mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
-        crossed = ga.crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
-        pop = np.concatenate((elites, crossed))
-        pop = ga.normalize_weights(pop, weight_names, master_genes)
-        pop = ga.normalize_weights(pop, exit_names, master_genes)
-        fitness_array = ga.fitness_pop(pop, dictionary, master_genes, dataset)
-        most_fit, average_fit = ga.fitness_stats(fitness_array)
-
-        ga_results.append((most_fit, average_fit))
-    ga_simulation_1.append(ga_results)
-    best_elite = ga.elite_individuals(pop, fitness_array, 1)
-    print('\n'+ str(best_elite))
-    logs.save_trader_logs(master_genes, trader, best_elite, most_fit,ga_simulation_1, 'sim' + str(j))
-
-ga_results = np.array(ga_simulation_1)
-print('\n Ga_results[most_fit, avg_fit]\n')
-print(ga_results[:,-1])
-
+log_path = logs.save_trader_logs(test_chromosome_list, train_results, ga_history, 'sim')
+# log = logs.get_trader_logs(fullpath=log_path)
+# print(log['test_chromosome_list'])
+# print(log['train_results'])
+# print(log['ga_history'])

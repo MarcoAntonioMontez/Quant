@@ -23,32 +23,25 @@ def create_sim_folder(folder_name):
     return folder_path
 
 
-def save_trader_logs(master_genes,trader,best_chromossome,fitness, ga_simulations, folder_name):
+def save_trader_logs(test_chromosome_list, train_results, ga_history, folder_name):
     path = create_sim_folder(folder_name)
 
-    dictionary = trader.user_input.inputs
-    # holdings = trader.get_holdings()
+    ga_history_path = path + '/ga_history.pickle'
+    test_chromosome_list_path = path + '/test_chromosome_list.pickle'
+    train_results_path = path + '/train_results.pickle'
 
-    log_dict = OrderedDict()
-    log_dict['roi'] = fitness
-    log_dict['best_chromossome'] = best_chromossome.tolist()
-    # log_dict['trader_dict'] = dictionary
-    log_dict['master_genes'] = master_genes
+    outfile = open(ga_history_path, 'wb')
+    pickle.dump(ga_history, outfile)
+    outfile.close()
 
-    trader_params = dictionary
+    outfile = open(test_chromosome_list_path, 'wb')
+    pickle.dump(test_chromosome_list, outfile)
+    outfile.close()
 
-    results = path + '/results.json'
-    trader_dict = path + '/trader_dict.json'
-    ga_sim = path + '/ga_history.json'
+    outfile = open(train_results_path, 'wb')
+    pickle.dump(train_results, outfile)
+    outfile.close()
 
-    with open(results, 'w') as outfile:
-        json.dump(log_dict, outfile)
-
-    with open(trader_dict, 'w') as outfile:
-        json.dump(trader_params, outfile)
-
-    with open(ga_sim, 'w') as outfile:
-        json.dump(ga_simulations, outfile)
     return path
 
 
@@ -63,15 +56,20 @@ def get_trader_logs(foldername=None, dirpath=None, fullpath=None):
     else:
         path = dirpath + foldername
 
-    results = path + '/results.json'
+    ga_history_path = path + '/ga_history.pickle'
+    test_chromosome_list_path = path + '/test_chromosome_list.pickle'
+    train_results_path = path + '/train_results.pickle'
 
-    with open(results) as infile:
-        results = json.load(infile)
+    infile = open(ga_history_path, 'rb')
+    ga_history = pickle.load(infile)
+    infile.close()
 
+    infile = open(test_chromosome_list_path, 'rb')
+    test_chromosome_list = pickle.load(infile)
+    infile.close()
 
-    d = OrderedDict()
-    d['roi']=results['roi']
-    d['best_chromossome'] = results['best_chromossome']
-    d['trader_dictionary'] = results['trader_dict']
-    d['master_genes'] = results['master_genes']
-    return d
+    infile = open(train_results_path, 'rb')
+    train_results = pickle.load(infile)
+    infile.close()
+
+    return {'ga_history': ga_history, 'test_chromosome_list' : test_chromosome_list, 'train_results': train_results}

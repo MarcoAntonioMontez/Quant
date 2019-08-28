@@ -412,7 +412,7 @@ def main(dataset, trader_params,ga_params):
 
     ga_simulation_1 = []
     for j in range(0, ga_reps):
-        ga_results = []
+        ga_history = []
         print("Simulation: " + str(j + 1))
 
         pop = init_pop(master_genes, pop_size)
@@ -423,13 +423,13 @@ def main(dataset, trader_params,ga_params):
         print("Init: ")
         fitness_array = fitness_pop(pop, trader_dictionary, master_genes, dataset)
         most_fit, average_fit = fitness_stats(fitness_array)
-        ga_results.append((most_fit, average_fit))
+        elites = elite_individuals(pop, fitness_array, elites_size)
+        best_elite = elite_individuals(pop, fitness_array, 1)
+        print(repr(best_elite))
+        ga_history.append((most_fit, average_fit, best_elite))
 
         for i in range(0, ga_runs):
             print("Iteration: " + str(i + 1))
-            elites = elite_individuals(pop, fitness_array, elites_size)
-            best_elite = elite_individuals(pop, fitness_array, 1)
-            print(repr(best_elite))
             selected_parents = tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
             mutated = mutation_pop(selected_parents, master_genes, prob_mutation, sigma, min_step)
             crossed = crossover_pop(mutated, offspring_size, number_parents_crossover, crossover_rate)
@@ -438,12 +438,15 @@ def main(dataset, trader_params,ga_params):
             #         pop = normalize_weights(pop,exit_names,master_genes)
             fitness_array = fitness_pop(pop, trader_dictionary, master_genes, dataset)
             most_fit, average_fit = fitness_stats(fitness_array)
+            elites = elite_individuals(pop, fitness_array, elites_size)
+            best_elite = elite_individuals(pop, fitness_array, 1)
+            print(repr(best_elite))
+            ga_history.append((most_fit, average_fit, best_elite))
 
-            ga_results.append((most_fit, average_fit))
-        ga_simulation_1.append(ga_results)
-        best_elite = elite_individuals(pop, fitness_array, 1)
+        ga_simulation_1.append(ga_history)
+        # best_elite = elite_individuals(pop, fitness_array, 1)
         #     display(best_elite)
-        print(repr(best_elite))
+        # print(repr(best_elite))
 
         # logs.save_trader_logs(master_genes, trader, best_elite, most_fit, ga_simulation_1, 'sim')
-    return {'master_genes': master_genes, 'trader_dictionary': trader_dictionary, 'best_chromosome': best_elite[0], 'best_roi' : most_fit}
+    return {'master_genes': master_genes, 'trader_dictionary': trader_dictionary, 'best_chromosome': best_elite[0], 'best_roi' : most_fit,'ga_history': ga_history}
