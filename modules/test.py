@@ -70,7 +70,7 @@ tickers_dict = tm.filter_n_largest(fundamental,screened_tickers_original,15)
 
 tickers = tickers_dict
 train_results = []
-testing_range = range(2010, 2011 + 1)
+testing_range = range(2010, 2010 + 1)
 training_period = 1
 
 trader_params = {'start_date': '2007-1-1',
@@ -79,48 +79,48 @@ trader_params = {'start_date': '2007-1-1',
                  'chromosome_list': []
                  }
 
-ga_params = {'pop_size': 10,
-             'ga_runs': 2,  # number of iterations
+ga_params = {'pop_size': 20,
+             'ga_runs': 50,  # number of iterations
              'ga_reps': 1  # number of independent simulations
              }
 
 test_chromosome_list = []
-
 ga_history = {}
 
-for year in testing_range:
-    start_train_year = year - training_period
-    end_train_year = year - 1
-    trader_params['start_date'] = str(start_train_year) + '-1-1'
-    trader_params['end_date'] = str(end_train_year) + '-12-31'
-    print('\n\nYear ' + str(year) + '\n')
-    data_params = ga.main(dataset, trader_params, ga_params)
+for iter in range(0,5):
+    for year in testing_range:
+        start_train_year = year - training_period
+        end_train_year = year - 1
+        trader_params['start_date'] = str(start_train_year) + '-1-1'
+        trader_params['end_date'] = str(end_train_year) + '-12-31'
+        print('\n\nYear ' + str(year) + '\n')
+        data_params = ga.main(dataset, trader_params, ga_params)
 
-    train_dict = {}
-    train_dict['start_date'] = trader_params['start_date']
-    train_dict['end_date'] = trader_params['end_date']
-    train_dict['train_roi'] = data_params['best_roi']
-    train_dict['best_chromosome'] = data_params['best_chromosome']
+        train_dict = {}
+        train_dict['start_date'] = trader_params['start_date']
+        train_dict['end_date'] = trader_params['end_date']
+        train_dict['train_roi'] = data_params['best_roi']
+        train_dict['best_chromosome'] = data_params['best_chromosome']
 
-    test_trader_params = trader_params.copy()
-    test_trader_params['start_date'] = str(year) + '-1-1'
-    test_trader_params['end_date'] = str(year) + '-12-31'
+        test_trader_params = trader_params.copy()
+        test_trader_params['start_date'] = str(year) + '-1-1'
+        test_trader_params['end_date'] = str(year) + '-12-31'
 
-    chromosome_ex = data_params['best_chromosome']
+        chromosome_ex = data_params['best_chromosome']
 
-    test_data = ga.simulate(dataset, test_trader_params, chromosome_ex)
-    train_dict['test_roi'] = test_data['roi']
-    train_dict['test_year'] = year
+        test_data = ga.simulate(dataset, test_trader_params, chromosome_ex)
+        train_dict['test_roi'] = test_data['roi']
+        train_dict['test_year'] = year
 
-    ga_history[str(year-training_period) + ':'+ str(year-1)] = data_params['ga_history']
+        ga_history[str(year-training_period) + ':'+ str(year-1)] = data_params['ga_history']
 
-    chromosome_dict = {'year': year,
-                       'chromosome': chromosome_ex}
+        chromosome_dict = {'year': year,
+                           'chromosome': chromosome_ex}
 
-    test_chromosome_list.append(chromosome_dict)
-    train_results.append(train_dict)
+        test_chromosome_list.append(chromosome_dict)
+        train_results.append(train_dict)
 
-log_path = logs.save_trader_logs(test_chromosome_list, train_results, ga_history, 'sim')
+    log_path = logs.save_trader_logs(test_chromosome_list, train_results, ga_history, 'sim_hyper' + str(iter))
 # log = logs.get_trader_logs(fullpath=log_path)
 # print(log['test_chromosome_list'])
 # print(log['train_results'])
