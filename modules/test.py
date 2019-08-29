@@ -69,7 +69,7 @@ tickers_dict = tm.filter_n_largest(fundamental,screened_tickers_original,15)
 # print(tickers_dict)
 
 tickers = tickers_dict
-train_results = []
+
 testing_range = range(2010, 2010 + 1)
 training_period = 1
 
@@ -84,10 +84,12 @@ ga_params = {'pop_size': 20,
              'ga_reps': 1  # number of independent simulations
              }
 
-test_chromosome_list = []
-ga_history = {}
+
 
 for iter in range(0,5):
+    train_results = []
+    test_chromosome_list = []
+    ga_history = {}
     for year in testing_range:
         start_train_year = year - training_period
         end_train_year = year - 1
