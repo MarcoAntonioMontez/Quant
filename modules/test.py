@@ -81,7 +81,8 @@ trader_params = {'start_date': '2007-1-1',
 
 ga_params = {'pop_size': 20,
              'ga_runs': 50,  # number of iterations
-             'ga_reps': 1  # number of independent simulations
+             'ga_reps': 1,  # number of independent simulations
+             'hyper_mutation': True
              }
 
 
