@@ -435,7 +435,7 @@ def main(dataset, trader_params,ga_params):
         for i in range(0, ga_runs):
             print("Iteration: " + str(i + 1))
             selected_parents = tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
-            if (average_fit > (most_fit*0.7)) and hyper_mutation:
+            if (average_fit > (most_fit*0.95)) and hyper_mutation:
                 print('Hyper Mutation')
                 mutated = mutation_pop(selected_parents, master_genes, hyper_prob_mutation, hyper_sigma, min_step)
             else:
