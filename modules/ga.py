@@ -409,6 +409,8 @@ def main(dataset, trader_params,ga_params):
     elites_size = int(pop_size * 0.2)
     ga_runs = ga_params['ga_runs']
     ga_reps = ga_params['ga_reps']
+    hyper_mutation = ga_params['hyper_mutation']
+
     if pop_size != (offspring_size + elites_size):
         raise Exception("Size of offspring plus size of elites must equal population size")
 
@@ -433,7 +435,7 @@ def main(dataset, trader_params,ga_params):
         for i in range(0, ga_runs):
             print("Iteration: " + str(i + 1))
             selected_parents = tournament(pop, fitness_array, tournament_size, tournament_co_winners, tour_parents)
-            if (average_fit > (most_fit*0.7)):
+            if (average_fit > (most_fit*0.7)) and hyper_mutation:
                 print('Hyper Mutation')
                 mutated = mutation_pop(selected_parents, master_genes, hyper_prob_mutation, hyper_sigma, min_step)
             else:
