@@ -37,13 +37,13 @@ class Trader:
 
 
     def __str__(self):
-        print('\nCurrent Day: ' + str(self.current_day))
-        print('\nStart date: ' + str(self.start_date))
-        print('\nEnd date: ' + str(self.end_date))
-        print('\nInitial Capital: ' + str(self.initial_capital))
-        print('\nTickers: ' + str(self.tickers))
-        print('\nStrategy: ' + str(self.strategy_name))
-        return
+        curr_day = '\nCurrent Day: ' + str(self.current_day)
+        start_date = '\nStart date: ' + str(self.start_date)
+        end_date = '\nEnd date: ' + str(self.end_date)
+        # print('\nInitial Capital: ' + str(self.initial_capital))
+        # print('\nTickers: ' + str(self.tickers))
+        # print('\nStrategy: ' + str(self.strategy_name))
+        return 'trader object'
 
     def adjusted_dates(self,df, user_start_date, user_end_date):
         real_start_date = None

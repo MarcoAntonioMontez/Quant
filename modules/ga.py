@@ -64,6 +64,21 @@ def decoder(arr_row, master_list):
     return decoded_params
 
 
+def hdecoder(arr_row, master_list):
+    dictionary = decoder(arr_row, master_list)
+    trader_dict = create_trader_dict()['strategy_params']
+    dictionary[trader_dict['exit_ind_1'] + ' w  '] = dictionary.pop('weight_exit_1')
+    dictionary[trader_dict['exit_ind_2'] + ' w    '] = dictionary.pop('weight_exit_2')
+    dictionary[trader_dict['exit_ind_3'] + ' w'] = dictionary.pop('weight_exit_3')
+    dictionary[trader_dict['volume_ind_1'] + ' w    '] = dictionary.pop('weight_vol_1')
+    dictionary[trader_dict['volume_ind_2'] + ' w    '] = dictionary.pop('weight_vol_2')
+    dictionary[trader_dict['volume_ind_3'] + ' w    '] = dictionary.pop('weight_vol_3')
+
+    dictionary[trader_dict['exit_ind_1'] + ' param  '] = dictionary.pop('exit_ind_1_param')
+    dictionary[trader_dict['exit_ind_2'] + ' param    '] = dictionary.pop('exit_ind_2_param')
+    dictionary[trader_dict['exit_ind_3'] + ' param'] = dictionary.pop('exit_ind_3_param')
+    return dictionary
+
 def update_params(trader_params, decoded_chromossome):
     trader_params = trader_params.copy()
     d = trader_params['strategy_params']
@@ -300,7 +315,7 @@ def create_trader_dict():
                                      'exit_ind_1_param': 14.0,
                                      'exit_ind_2_param': 20.0,
                                      'exit_ind_3_param': 100,
-                                     'exit_ind_1': 'aroon_s',
+                                         'exit_ind_1': 'aroon_s',
                                      'exit_ind_2': 'ssl_s',  # ssl_line
                                      'exit_ind_3': 'ema_slope',  # sar_line
                                      'volume_ind_1': 'cmf20',

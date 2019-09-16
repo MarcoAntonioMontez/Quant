@@ -394,3 +394,34 @@ def filter_n_largest(dataset,dictionary,n):
         new_dict[year] = n_largest(dataset,dictionary[year],year,n)
     return new_dict
 
+def sharpe_ratio(daily_returns, risk_free_rate = 0.02):
+    trading_days = daily_returns.count()
+    mean_returns = daily_returns.mean()
+    mean_annual_returns = mean_returns * trading_days
+    std = daily_returns.std()
+    std_annual = std * math.sqrt(trading_days)
+    sharpe = (mean_annual_returns-risk_free_rate) / std_annual
+    return sharpe
+
+def maximum_draw_down(holdings):
+    xs = np.array(holdings)
+    i = np.argmax(np.maximum.accumulate(xs) - xs) # end of the period
+    j = np.argmax(xs[:i]) # start of period
+    high = xs[j]
+    low = xs[i]
+    mdd = (high - low)/high
+    return mdd
+
+def beta_stock(stock,market):
+    init_stamp = stock.index[0].strftime('%Y-%m-%d')
+    final_stamp = stock .index[-1].strftime('%Y-%m-%d')
+    market_aux = market[(market.index >= init_stamp) & (market.index <= final_stamp)]
+    market = market_aux / market_aux[0]
+    market = pd.DataFrame(market).set_index(stock.index)
+    market = market.iloc[:,0]
+    stock = stock.pct_change()
+    market = market.pct_change()
+    cov = stock.cov(market)
+    var = market.var()
+    beta = cov/var
+    return beta

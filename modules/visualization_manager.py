@@ -31,7 +31,7 @@ def color_bar():
     return one
 
 
-def plot(dataset, fields=None, plot_type='scatter', title='plot',path = None,show_plot = True):
+def plot(dataset, fields=None, plot_type='scatter', title='plot',path = None,show_plot = True,xaxis_title = '',yaxis_title ='',height=500, width = 1000):
     df = dataset
     data = []
 
@@ -59,9 +59,15 @@ def plot(dataset, fields=None, plot_type='scatter', title='plot',path = None,sho
         xaxis=dict(
             rangeslider=dict(
                 visible=False
-            )))
+            ),
+        title = xaxis_title),
+        yaxis=dict(
+            title=yaxis_title,
+        )
+    )
 
     fig = dict(data=data, layout=layout)
+    fig['layout'].update(height=height, width=width, title=title, font=dict(family='helvetica', size=22, color="Black"))
     if show_plot:
         iplot(fig, filename=title)
     if path is not None:
