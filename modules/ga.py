@@ -331,6 +331,25 @@ def create_trader_dict():
                                      }
 
     return dictionary
+
+
+def gene_names():
+    gene_names = []
+    gene_names.append('aroon_s param')
+    gene_names.append('ssl_s param')
+    gene_names.append('ema_slope param')
+
+    gene_names.append('aroon_s w')
+    gene_names.append('ssl_s w')
+    gene_names.append('ema_slope w')
+    gene_names.append('cmf20 w')
+    gene_names.append('cmo14 w')
+    gene_names.append('mfi14 w')
+
+    gene_names.append('stop_loss_parameter')
+    gene_names.append('trailing_stop_parameter')
+    return gene_names
+
 def master_genes_calc():
     f_range = (0.5, 10)
     unit_range = (0, 1)

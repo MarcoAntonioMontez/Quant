@@ -394,7 +394,7 @@ def filter_n_largest(dataset,dictionary,n):
         new_dict[year] = n_largest(dataset,dictionary[year],year,n)
     return new_dict
 
-def sharpe_ratio(daily_returns, risk_free_rate = 0.02):
+def sharpe_ratio(daily_returns, risk_free_rate = 0.01):
     trading_days = daily_returns.count()
     mean_returns = daily_returns.mean()
     mean_annual_returns = mean_returns * trading_days

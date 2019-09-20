@@ -30,6 +30,7 @@ class Statistics:
 
     def calc_win_rate(self, roi_list):
         self.win_rate = tm.win_rate(roi_list)
+        return self.win_rate
 
     def calc_avg_win_loss(self, roi_list):
         self.avg_win, self.avg_loss = tm.avg_win_loss(roi_list)
