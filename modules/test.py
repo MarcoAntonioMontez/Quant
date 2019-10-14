@@ -57,20 +57,20 @@ fundamental = dm.load_csv(data_path + fundamentals, 0)
 # print(fundamental.head())
 
 
-td_filename = '../data' + '/screened_tickers.json'
+td_filename = '../data' + '/screened_tickers_2.json'
 
 with open(td_filename) as infile:
     screened_tickers_original = json.load(infile)
 
 screened_tickers_original = {int(key):screened_tickers_original[key] for key in screened_tickers_original}
-tickers_dict = tm.filter_n_largest(fundamental,screened_tickers_original,15)
+# tickers_dict = tm.filter_n_largest(fundamental,screened_tickers_original,15)
 
 # print(tickers_dict_original)
 # print(tickers_dict)
 
-tickers = tickers_dict
+tickers = screened_tickers_original
 
-testing_range = range(2010, 2010 + 1)
+testing_range = range(2010, 2010+ 1)
 training_period = 1
 
 trader_params = {'start_date': '2007-1-1',
@@ -80,9 +80,9 @@ trader_params = {'start_date': '2007-1-1',
                  }
 
 ga_params = {'pop_size': 20,
-             'ga_runs': 50,  # number of iterations
+             'ga_runs': 5,  # number of iterations
              'ga_reps': 1,  # number of independent simulations
-             'hyper_mutation': True
+             'hyper_mutation': False
              }
 
 
@@ -123,7 +123,7 @@ for iter in range(0,5):
         test_chromosome_list.append(chromosome_dict)
         train_results.append(train_dict)
 
-    log_path = logs.save_trader_logs(test_chromosome_list, train_results, ga_history, 'sim_hyper' + str(iter))
+    log_path = logs.save_trader_logs(test_chromosome_list, train_results, ga_history, 'sim_normal' + str(iter))
 # log = logs.get_trader_logs(fullpath=log_path)
 # print(log['test_chromosome_list'])
 # print(log['train_results'])
